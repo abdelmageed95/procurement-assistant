@@ -380,7 +380,7 @@ procurement_experiments/
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/procurement-agent.git
+git clone https://github.com/abdelmageed95/procurement-agent.git
 cd procurement-agent
 ```
 
@@ -397,23 +397,8 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-**Key Dependencies:**
-```
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-pymongo==4.5.0
-chromadb==0.4.18
-sentence-transformers==2.2.2
-openai==1.3.5
-langgraph==0.0.20
-python-dotenv==1.0.0
-```
 
 ### Step 4: Set Up Environment Variables
-
-```bash
-cp .env.example .env
-```
 
 Edit `.env`:
 
