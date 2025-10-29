@@ -1,0 +1,45 @@
+# virualtenv
+.venv
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.egg-info/
+*.egg
+*.log   
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace 
+
+# environment files
+.env
+.env.local
+.env.*.local
+.procurement_agent_env/
+
+#pdfs
+*.pdf
+
+# data files
+data/procurement_data.db
+data/procurement_data.db-journal
+data/sessions.json
+data/sessions_backup_*.json
+logs/
+
+#csv files
+*.csv
+*.tsv
+
+#zip files
+*.zip
+
+# chromadb
+chroma_db/
+

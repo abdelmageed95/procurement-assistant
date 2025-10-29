@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Procurement Assistant</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="title"> Procurement Assistant</h1>
+                <p class="subtitle">Expert guidance on CA state purchases over $5,000 (2012-2015)</p>
+            </div>
+            <div class="header-actions">
+                <button id="newSessionBtn" class="btn-primary">New Session</button>
+                <button id="sessionsBtn" class="btn-secondary">History</button>
+                <button id="clearBtn" class="btn-secondary">Clear Chat</button>
+            </div>
+        </header>
+
+        <!-- Sessions Modal -->
+        <div class="modal" id="sessionsModal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Session History</h2>
+                    <button class="modal-close" id="closeModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="sessions-list" id="sessionsList">
+                        <p class="loading">Loading sessions...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technical Details Modal -->
+        <div class="modal" id="technicalModal" style="display: none;">
+            <div class="modal-content technical-modal">
+                <div class="modal-header">
+                    <h2>Technical Details</h2>
+                    <button class="modal-close" id="closeTechnicalModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="technicalDetails">
+                        <div class="tech-section">
+                            <h3>Generated MongoDB Query</h3>
+                            <pre id="queryDisplay"></pre>
+                        </div>
+                        <div class="tech-section">
+                            <h3>Execution Results</h3>
+                            <p id="resultCount"></p>
+                            <pre id="resultsDisplay"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="chat-container">
+            <!-- Messages Area -->
+            <div class="messages" id="messages">
+            </div>
+
+            <!-- Typing Indicator -->
+            <div class="typing-indicator" id="typingIndicator" style="display: none;">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-area">
+                <form id="chatForm">
+                    <div class="input-wrapper">
+                        <textarea
+                            id="messageInput"
+                            placeholder="Ask about California procurement..."
+                            rows="1"
+                            autocomplete="off"
+                        ></textarea>
+                        <button type="submit" id="sendBtn" class="btn-primary">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M2 10L18 2L12 10L18 18L2 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Send
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
