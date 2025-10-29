@@ -118,10 +118,17 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
             metadata["success"] = result.get("success", True)
 
             # Add technical details for debugging
+            # Two-tier approach: limited results for summary, complete results for downloads
+            summary_results = result.get("query_results", [])
+            complete_results = result.get("complete_results", [])
+            total_count = metadata.get("total_count", 0)
+
             metadata["technical_details"] = {
                 "query": metadata.get("query", {}),
-                "result_count": metadata.get("count", 0),
-                "raw_results": result.get("query_results", [])[:5]  # Only send first 5 results
+                "result_count": len(summary_results),  # Count of summary results
+                "total_count": total_count,  # Total count in database
+                "raw_results": complete_results,  # Send COMPLETE results (up to 10,000) for downloads
+                "shown_in_summary": len(summary_results)  # How many shown in text
             }
 
             await websocket.send_json({
@@ -174,7 +181,7 @@ async def list_sessions():
         "sessions": [
             {
                 "session_id": session["_id"],
-                "last_activity": session["last_message"].isoformat(),
+                "last_activity": session["last_message"].replace(tzinfo=timezone.utc).isoformat(),
                 "message_count": session["message_count"],
                 "preview": session["first_message"][:50] + "..." if len(session["first_message"]) > 50 else session["first_message"]
             }
@@ -202,7 +209,7 @@ async def get_session_history(session_id: str, limit: int = 50):
             {
                 "role": msg["role"],
                 "content": msg["content"],
-                "timestamp": msg["timestamp"].isoformat()
+                "timestamp": msg["timestamp"].replace(tzinfo=timezone.utc).isoformat() if msg["timestamp"].tzinfo is None else msg["timestamp"].isoformat()
             }
             for msg in messages
         ]

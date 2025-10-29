@@ -1,137 +1,191 @@
 """
 Guardrails for the procurement agent
-Ensures the agent stays on topic and within allowed scope
+Ensures safe input/output without restricting topics (router handles routing)
 """
 from typing import Dict, Any, Literal
 from openai import OpenAI
 import os
+import re
 
 
-class ProcurementGuardrails:
-    """Input/output validation for procurement agent"""
+class SafetyGuardrails:
+    """Input/output validation focused on safety, not topic restriction"""
 
-    def __init__(self, allowed_topics: list, openai_api_key: str = None):
-        self.allowed_topics = allowed_topics
+    def __init__(self, openai_api_key: str = None):
         self.client = OpenAI(api_key=openai_api_key or os.getenv("OPENAI_API_KEY"))
 
-    def validate_input(self, user_message: str) -> Dict[str, Any]:
+    def validate_input(self, user_message: str, user_id: str = "unknown") -> tuple[bool, str, dict]:
         """
-        Validate if user input is procurement-related
-        Returns: {"is_valid": bool, "reason": str}
+        Validate input for safety concerns (NOT topic restriction)
+
+        Checks:
+        - Length limits
+        - Harmful content detection
+        - Prompt injection attempts
+        - Basic PII detection
+
+        Returns: (is_valid, error_msg, metadata)
         """
-        # Quick keyword check first (fast)
-        message_lower = user_message.lower()
-        if any(topic in message_lower for topic in self.allowed_topics):
-            return {"is_valid": True, "reason": "Topic keywords found"}
+        metadata = {
+            "checks_performed": [],
+            "warnings": []
+        }
 
-        # Use LLM for nuanced check (slower but more accurate)
-        try:
-            response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": (
-                            "You are a topic validator. Determine if the user's message "
-                            "is related to procurement, purchases, California state spending, "
-                            "suppliers, vendors, or statistics about these topics.\n\n"
-                            "Respond with ONLY 'YES' or 'NO'."
-                        )
-                    },
-                    {
-                        "role": "user",
-                        "content": user_message
-                    }
-                ],
-                max_tokens=10,
-                temperature=0
-            )
+        # 1. Length check
+        metadata["checks_performed"].append("length_check")
+        if len(user_message) > 5000:
+            return False, "Input too long (max 5000 characters)", metadata
 
-            verdict = response.choices[0].message.content.strip().upper()
+        if len(user_message.strip()) < 1:
+            return False, "Input is empty", metadata
 
-            if verdict == "YES":
-                return {"is_valid": True, "reason": "LLM validated topic"}
-            else:
-                return {
-                    "is_valid": False,
-                    "reason": "Topic not related to California procurement"
-                }
-
-        except Exception as e:
-            # On error, be permissive
-            print(f"Guardrails validation error: {e}")
-            return {"is_valid": True, "reason": "Validation error, allowing"}
-
-    def validate_output(self, assistant_response: str) -> Dict[str, Any]:
-        """
-        Validate assistant output doesn't contain harmful content
-        For now, simple checks - can be enhanced later
-        """
-        # Check for obvious rejections
-        rejection_phrases = [
-            "i cannot",
-            "i'm not able to",
-            "i don't have access",
-            "outside my scope"
+        # 2. Basic harmful content detection
+        metadata["checks_performed"].append("harmful_content")
+        harmful_patterns = [
+            r'\bkill\b.*\bpeople\b',
+            r'\bharm\b.*\bchildren\b',
+            r'\bexploit\b.*\bvulnerability\b',
+            r'\bhack\b.*\bsystem\b'
         ]
 
-        response_lower = assistant_response.lower()
-        is_rejection = any(phrase in response_lower for phrase in rejection_phrases)
+        for pattern in harmful_patterns:
+            if re.search(pattern, user_message, re.IGNORECASE):
+                return False, "Input contains potentially harmful content", metadata
 
-        return {
-            "is_valid": True,
-            "is_rejection": is_rejection,
-            "reason": "Output validated"
+        # 3. Prompt injection detection (basic)
+        metadata["checks_performed"].append("injection_check")
+        injection_patterns = [
+            r'ignore\s+(all\s+)?previous\s+instructions',
+            r'disregard\s+(all\s+)?previous\s+instructions',
+            r'you\s+are\s+now\s+a',
+            r'forget\s+your\s+previous\s+instructions'
+        ]
+
+        for pattern in injection_patterns:
+            if re.search(pattern, user_message, re.IGNORECASE):
+                metadata["warnings"].append("possible_prompt_injection")
+                # Don't block, just warn
+                break
+
+        # 4. Basic PII detection (email, SSN patterns)
+        metadata["checks_performed"].append("pii_check")
+        pii_patterns = {
+            "email": r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
+            "ssn": r'\b\d{3}-\d{2}-\d{4}\b'
         }
+
+        for pii_type, pattern in pii_patterns.items():
+            if re.search(pattern, user_message):
+                metadata["warnings"].append(f"possible_{pii_type}")
+
+        # All checks passed
+        return True, "", metadata
+
+    def sanitize_output(self, output: str) -> tuple[str, dict]:
+        """
+        Sanitize output for safety
+
+        - Strip HTML/script tags
+        - Truncate if too long
+        - Basic XSS prevention
+
+        Returns: (sanitized_output, metadata)
+        """
+        metadata = {
+            "sanitization_performed": []
+        }
+
+        sanitized = output
+
+        # 1. Strip HTML tags (basic XSS prevention)
+        if '<' in sanitized and '>' in sanitized:
+            sanitized = re.sub(r'<[^>]+>', '', sanitized)
+            metadata["sanitization_performed"].append("html_stripped")
+
+        # 2. Length truncation
+        if len(sanitized) > 10000:
+            sanitized = sanitized[:10000] + "... [truncated]"
+            metadata["sanitization_performed"].append("truncated")
+
+        return sanitized, metadata
 
 
 def input_guardrails_node(state: Dict) -> Dict:
-    """LangGraph node for input validation"""
+    """
+    LangGraph node for input validation
+    Validates SAFETY only, not topic (router handles routing)
+    """
     from ..config import Config
 
-    guardrails = ProcurementGuardrails(
-        allowed_topics=Config.ALLOWED_TOPICS,
-        openai_api_key=Config.OPENAI_API_KEY
-    )
+    print("🛡️  Input Guardrails: Validating user input...")
+
+    guardrails = SafetyGuardrails(openai_api_key=Config.OPENAI_API_KEY)
 
     user_message = state.get("user_message", "")
-    validation = guardrails.validate_input(user_message)
+    user_id = state.get("user_id", "unknown")
 
-    state["input_validation"] = validation
+    # Validate input (returns tuple: is_valid, error_msg, metadata)
+    is_valid, error_msg, metadata = guardrails.validate_input(user_message, user_id)
 
-    if not validation["is_valid"]:
-        state["agent_response"] = (
-            "I'm a procurement assistant specializing in California state "
-            "purchases over $5,000 from 2012-2015. I can only answer questions "
-            "about procurement, purchases, suppliers, vendors, and related statistics. "
-            "Please ask a procurement-related question."
-        )
+    state["input_validation"] = {
+        "passed": is_valid,
+        "error": error_msg,
+        "metadata": metadata
+    }
+
+    if not is_valid:
+        print(f"   ❌ Validation failed: {error_msg}")
+        state["validation_failed"] = True
+        state["agent_response"] = f"Sorry, your input couldn't be processed: {error_msg}"
+    else:
+        print(f"   ✅ Validation passed")
+        if metadata.get("warnings"):
+            print(f"   ⚠️  Warnings: {', '.join(metadata['warnings'])}")
+        state["validation_failed"] = False
+
+    print(f"   Checks: {', '.join(metadata.get('checks_performed', []))}")
 
     return state
 
 
 def output_guardrails_node(state: Dict) -> Dict:
-    """LangGraph node for output validation"""
+    """
+    LangGraph node for output sanitization
+    Sanitizes output for safety
+    """
     from ..config import Config
 
-    guardrails = ProcurementGuardrails(
-        allowed_topics=Config.ALLOWED_TOPICS,
-        openai_api_key=Config.OPENAI_API_KEY
-    )
+    print("🛡️  Output Guardrails: Sanitizing agent response...")
 
-    assistant_response = state.get("agent_response", "")
-    validation = guardrails.validate_output(assistant_response)
+    # Skip if validation failed earlier
+    if state.get("validation_failed", False):
+        print("   ⏭️  Skipping (input validation failed)")
+        return state
 
-    state["output_validation"] = validation
+    guardrails = SafetyGuardrails(openai_api_key=Config.OPENAI_API_KEY)
+
+    agent_response = state.get("agent_response", "")
+
+    # Sanitize output (returns tuple: sanitized_output, metadata)
+    sanitized_output, metadata = guardrails.sanitize_output(agent_response)
+
+    state["agent_response"] = sanitized_output
+    state["output_sanitization"] = {
+        "metadata": metadata
+    }
+
+    print(f"   ✅ Sanitization complete")
+    if metadata.get("sanitization_performed"):
+        print(f"   Actions: {', '.join(metadata['sanitization_performed'])}")
 
     return state
 
 
 def should_continue_after_validation(state: Dict) -> Literal["continue", "end"]:
-    """Conditional edge: continue or end based on validation"""
-    validation = state.get("input_validation", {})
-
-    if validation.get("is_valid", False):
-        return "continue"
-    else:
+    """
+    Conditional edge: continue or end based on validation
+    Only stops for SAFETY issues, not topic restrictions
+    """
+    if state.get("validation_failed", False):
         return "end"
+    return "continue"

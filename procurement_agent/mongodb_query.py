@@ -113,8 +113,13 @@ class MongoDBQueryAgent:
         return doc
 
     def _execute_query(self, query_params: Dict) -> Dict:
-        """Execute MongoDB query safely"""
-        MAX_RESULTS = 100
+        """
+        Execute MongoDB query safely with two-tier approach:
+        - Limited results (100) for fast chat summary
+        - Complete results (unlimited) for technical details and downloads
+        """
+        MAX_SUMMARY_RESULTS = 100
+        MAX_COMPLETE_RESULTS = 10000  # Safety limit to prevent memory issues
 
         try:
             operation = query_params.get("operation")
@@ -123,19 +128,31 @@ class MongoDBQueryAgent:
             if operation == "find":
                 projection = query_params.get("projection", {})
                 sort = query_params.get("sort", {})
-                limit = min(query_params.get("limit", MAX_RESULTS), MAX_RESULTS)
 
-                cursor = self.collection.find(filter_query, projection)
+                # Execute LIMITED query for summary
+                cursor_limited = self.collection.find(filter_query, projection)
                 if sort:
-                    cursor = cursor.sort(list(sort.items()))
-                cursor = cursor.limit(limit)
+                    cursor_limited = cursor_limited.sort(list(sort.items()))
+                cursor_limited = cursor_limited.limit(MAX_SUMMARY_RESULTS)
+                summary_results = [self._clean_document_for_json(doc) for doc in cursor_limited]
 
-                results = [self._clean_document_for_json(doc) for doc in cursor]
+                # Execute COMPLETE query for downloads (with safety limit)
+                cursor_complete = self.collection.find(filter_query, projection)
+                if sort:
+                    cursor_complete = cursor_complete.sort(list(sort.items()))
+                cursor_complete = cursor_complete.limit(MAX_COMPLETE_RESULTS)
+                complete_results = [self._clean_document_for_json(doc) for doc in cursor_complete]
+
+                # Get total count
+                total_count = self.collection.count_documents(filter_query)
+
                 return {
                     "success": True,
                     "operation": "find",
-                    "results": results,
-                    "count": len(results)
+                    "results": summary_results,  # For chat summary
+                    "count": len(summary_results),
+                    "complete_results": complete_results,  # For downloads
+                    "total_count": total_count  # Actual total in database
                 }
 
             elif operation == "count":
@@ -143,7 +160,9 @@ class MongoDBQueryAgent:
                 return {
                     "success": True,
                     "operation": "count",
-                    "count": count
+                    "count": count,
+                    "complete_results": [],  # No results for count operations
+                    "total_count": count
                 }
 
             elif operation == "aggregate":
@@ -171,21 +190,38 @@ class MongoDBQueryAgent:
 
                 pipeline = self._parse_datetime_placeholders(pipeline)
 
-                # Auto-limit aggregations
-                has_limit = any("$limit" in stage for stage in pipeline)
-                if not has_limit:
-                    pipeline.append({"$limit": MAX_RESULTS})
+                # Remove any existing $limit stage for complete query
+                pipeline_without_limit = [stage for stage in pipeline if "$limit" not in stage]
 
-                print(f"Executing pipeline: {json.dumps(pipeline, default=str, indent=2)}")
+                # Execute LIMITED query for summary
+                pipeline_limited = pipeline_without_limit.copy()
+                pipeline_limited.append({"$limit": MAX_SUMMARY_RESULTS})
 
-                results = list(self.collection.aggregate(pipeline))
-                results = [self._clean_document_for_json(doc) for doc in results]
+                print(f"Executing LIMITED pipeline (summary): {json.dumps(pipeline_limited, default=str, indent=2)}")
+                summary_results = list(self.collection.aggregate(pipeline_limited))
+                summary_results = [self._clean_document_for_json(doc) for doc in summary_results]
+
+                # Execute COMPLETE query for downloads (with safety limit)
+                pipeline_complete = pipeline_without_limit.copy()
+                pipeline_complete.append({"$limit": MAX_COMPLETE_RESULTS})
+
+                print(f"Executing COMPLETE pipeline (downloads): {json.dumps(pipeline_complete, default=str, indent=2)}")
+                complete_results = list(self.collection.aggregate(pipeline_complete))
+                complete_results = [self._clean_document_for_json(doc) for doc in complete_results]
+
+                # Get total count by running pipeline with $count
+                pipeline_count = pipeline_without_limit.copy()
+                pipeline_count.append({"$count": "total"})
+                count_result = list(self.collection.aggregate(pipeline_count))
+                total_count = count_result[0]["total"] if count_result else len(complete_results)
 
                 return {
                     "success": True,
                     "operation": "aggregate",
-                    "results": results,
-                    "count": len(results)
+                    "results": summary_results,  # For chat summary (limited to 100)
+                    "count": len(summary_results),
+                    "complete_results": complete_results,  # For downloads (up to 10,000)
+                    "total_count": total_count  # Actual total in database
                 }
 
             else:
@@ -265,17 +301,11 @@ class MongoDBQueryAgent:
             response = self.openai_client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {
-                        "role": "system",
-                        "content": system_message
-                    },
-                    {
-                        "role": "user",
-                        "content": user_query
-                    }
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": user_query},
                 ],
                 tools=cast(Any, tools),  # Type hint workaround for strict type checking
-                tool_choice="required"  # Force function calling (not text response)
+                tool_choice="required",  # Force function calling (not text response)
             )
 
             # Parse function call
@@ -319,8 +349,10 @@ class MongoDBQueryAgent:
 
             return {
                 "response": response_text,
-                "data": results.get("results", []),
-                "count": results.get("count", 0),
+                "data": results.get("results", []),  # Limited results for summary
+                "complete_results": results.get("complete_results", []),  # Complete results for downloads
+                "count": results.get("count", 0),  # Count of summary results
+                "total_count": results.get("total_count", 0),  # Total count in database
                 "success": True,
                 "query": query_params
             }
@@ -400,32 +432,93 @@ class MongoDBQueryAgent:
         return f"Query returned {count:,} results."
 
     def convert_results_to_human_language_llm(self, user_query: str, results: Dict) -> str:
-        """Convert query results to human-readable format using LLM (matches notebook)"""
-        # Sample results for LLM
-        sample_results = results.get("results", [])[:5]
+        """Convert query results to human-readable format using LLM"""
+        all_results = results.get("results", [])
         count = results.get("count", 0)
+
+        # Determine sample size based on total count
+        if count <= 5:
+            sample_size = count  # Show all
+        elif count <= 20:
+            sample_size = min(10, count)  # Show up to 10
+        else:
+            sample_size = 15  # For large result sets, show top 15
+
+        sample_results = all_results[:sample_size]
 
         # Clean datetime objects for JSON
         sample_results = [self._clean_document_for_json(doc) for doc in sample_results]
 
         try:
-            # Prepare minimal context (like notebook)
-            context = f"Q: {user_query}\nResults ({count}): {json.dumps(sample_results[:2], indent=2)}"
+            # Build context
+            if count > sample_size:
+                # Partial results
+                context = (
+                    f"User Question: {user_query}\n\n"
+                    f"Query returned {count} total results.\n"
+                    f"Top {sample_size} results:\n"
+                    f"{json.dumps(sample_results, indent=2)}"
+                )
+            else:
+                # All results
+                context = (
+                    f"User Question: {user_query}\n\n"
+                    f"Query returned {count} results:\n"
+                    f"{json.dumps(sample_results, indent=2)}"
+                )
 
             response = self.openai_client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
                     {
                         "role": "system",
-                        "content": "Answer in 1-2 sentences."
-                        "markdown format."
+                        "content": """You are a friendly, knowledgeable data analyst who explains California procurement data in natural, engaging language.
+
+PERSONALITY:
+- Conversational and warm (not robotic)
+- Enthusiastic about insights and patterns
+- Use natural transitions ("Interesting!", "Here's what stands out", "Let me break this down")
+- Vary your sentence structure
+- Tell a story with the data
+
+FORMATTING RULES:
+1. Start with a natural sentence, not "Found X results"
+2. Use conversational intros: "Looking at the data...", "Here's what I found...", "Interesting results here..."
+3. Mix narrative with data points
+4. Highlight surprising insights with natural reactions
+5. Use emojis sparingly for emphasis (📊 💰 ⭐)
+6. Format numbers clearly: $484M (not 484000000), $55.1M, etc.
+7. If partial results, naturally suggest: "Want to see all the details? Check out the Technical Details button below"
+
+STRUCTURE:
+- Opening: Natural intro sentence about what the data shows
+- Key findings: Top 5-10 results with context
+- Insight: One interesting pattern or standout finding
+- Closing: Friendly pointer to technical details if there's more data
+
+AVOID:
+- "Found X results" (too robotic)
+- Bullet points only (mix with narrative)
+- Dry statistical language
+- Repeating "total", "results", "query returned"
+
+EXAMPLE:
+Instead of: "Found 83 departments. Top 10: 1. Health Care: $484M..."
+Write: "Looking at spending across California's departments, Health Care Services absolutely dominates with $484M - that's nearly 65% of all procurement spending! Here are the top departments:
+
+**Health Care Services** leads the pack at $484.4M
+**Water Resources** comes in second at $55.1M
+**Transportation** rounds out the top three at $54.3M
+...
+
+What really stands out is how concentrated the spending is - just these top 5 departments account for over 80% of the total budget.
+
+💡 Want the complete breakdown of all 83 departments? Click Technical Details below to see everything and download the data."
+"""
                     },
-                    {
-                        "role": "user",
-                        "content": context
-                    }
+                    {"role": "user", "content": context},
                 ],
-                max_completion_tokens=100
+                max_completion_tokens=400,  # Allow longer responses for complete answers
             )
 
             return response.choices[0].message.content.strip() if response.choices[0].message.content else "No explanation."

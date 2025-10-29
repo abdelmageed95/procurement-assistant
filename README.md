@@ -1,6 +1,6 @@
-#  Procurement Data Assistant
+# 🏛️ California Procurement Data Assistant
 
-A production-ready, data-driven conversational AI system that analyzes California state purchase orders using natural language queries and MongoDB aggregations.
+A production-ready, intelligent conversational AI system that analyzes California state purchase orders using natural language queries, MongoDB aggregations, and multi-agent routing.
 
 ![Python](https://img.shields.io/badge/python-3.10+-blue.svg)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)
@@ -9,87 +9,233 @@ A production-ready, data-driven conversational AI system that analyzes Californi
 
 ---
 
-## Table of Contents
+## 📋 Table of Contents
 
 - [Overview](#overview)
 - [Key Features](#key-features)
+- [What's New](#whats-new)
 - [System Architecture](#system-architecture)
 - [Project Structure](#project-structure)
-- [Components](#components)
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [Usage](#usage)
-- [API Documentation](#api-documentation)
 - [Query Examples](#query-examples)
 - [Architecture Decisions](#architecture-decisions)
-- [Testing](#testing)
 - [Contributing](#contributing)
-- [License](#license)
 
 ---
 
 ## 🎯 Overview
 
-This project implements a **specialized data-query conversational agent** for analyzing California state procurement data (2012-2015, purchases over $5,000). Unlike general-purpose chatbots, this system is purpose-built for data exploration:
+This project implements a **specialized multi-agent conversational system** for analyzing California state procurement data (2012-2015, purchases over $5,000). The system intelligently routes between data queries and general conversation:
 
-**Key Characteristics:**
-- 🎯 **Data-Only Agent** - No general knowledge, only procurement data queries
+### **Dual-Mode Intelligence:**
+- 🎯 **Data Query Agent** - Answers questions using MongoDB aggregations and natural language explanations
+- 💬 **Chat Agent** - Handles greetings, help requests, and general conversation
+- 🔀 **Smart Router** - Automatically classifies user intent and routes to the appropriate agent
+
+### **Core Capabilities:**
 - 🧠 **Intelligent Query Generation** - Natural language → MongoDB queries using OpenAI function calling
 - 💾 **Dual Memory System** - Short-term (MongoDB) + Long-term (ChromaDB) for context-aware responses
-- 🛡️ **Input/Output Guardrails** - Content safety and query validation
-- 🔄 **Smart Duplicate Detection** - Prevents redundant memory storage
+- 🛡️ **Safety Guardrails** - Input/output validation focused on safety (not topic restriction)
+- 📊 **Complete Data Access** - View all results with Technical Details modal + CSV/JSON downloads
+- 🎨 **Natural Language Responses** - Engaging, conversational explanations (not robotic)
 - ⚡ **Real-time WebSocket** - Instant query results and detailed explanations
-- 🔁 **Resend Functionality** - Retry failed queries with one click
-
-The system features:
-- ✅ **Automatic MongoDB query generation** from natural language
-- ✅ **Detailed LLM explanations** of query results (always enabled)
-- ✅ **Conversation memory** across sessions
-- ✅ **Error handling** with helpful suggestions
-- ✅ **Modern responsive UI** with professional design
+- 🔁 **Smart Resend** - Retry failed queries with automatic cleanup
+- 📱 **Session Management** - Persistent sessions across page refreshes, history browser, and session switching
 
 ---
 
 ## 🚀 Key Features
 
-### Intelligent Query System
+### 1. **Intelligent Multi-Agent Routing** 🆕
+
+The system automatically classifies user intent and routes to the appropriate agent:
+
+```
+User Message → Router Agent → Decision:
+                              ├─ Data Query → MongoDB Agent
+                              └─ General Chat → Chat Agent
+```
+
+**Examples:**
+- "Hello!" → Chat Agent (greeting)
+- "What is the average order value?" → Data Agent (query)
+- "Thanks!" → Chat Agent (acknowledgment)
+- "Show me top 5 suppliers" → Data Agent (aggregation)
+
+### 2. **Complete Data Visibility with Two-Tier Query System** 🆕
+
+**Problem Solved:** Users asking "What was the total spending by department?" need to see ALL results, not just the first 100. Downloads were limited to 100 rows even though more data existed.
+
+**Solution: Two-Tier Query Execution**
+- **Tier 1 - Fast Summary** (Limited to 100): Quick response for chat display
+- **Tier 2 - Complete Data** (Up to 10,000): Full dataset for downloads and analysis
+- **Total Count Tracking**: Shows actual database totals vs available data
+
+**How It Works:**
+```
+Query Execution:
+├─ LIMITED Query (100 results) → Fast chat summary
+├─ COMPLETE Query (10,000 results) → Technical Details & downloads
+└─ COUNT Query → Actual total in database
+
+User: "What was the total spending by department?"
+Response: "Looking at spending across California's departments,
+Health Care Services absolutely dominates with $484M - that's
+nearly 65% of all procurement spending! Here are the top 10...
+
+💡 Want the complete breakdown of all 83 departments? Click
+Technical Details below to see everything and download the data."
+
+[Technical Details Button] → Opens modal with:
+- Total results: 83 | Complete data available (83 records)
+- ALL 83 results viewable (scrollable JSON)
+- [📥 Download CSV] [📥 Download JSON] - Contains all 83 records
+- Exact MongoDB query used
+```
+
+**Performance Benefits:**
+- ⚡ **Fast chat responses** - Limited queries return quickly
+- 📊 **Complete data access** - Downloads include up to 10,000 records
+- 🛡️ **Safety limits** - 10K max prevents memory issues
+- 📈 **Transparency** - Clear messaging about total vs available counts
+
+### 3. **Natural, Engaging Responses** 🆕
+
+**Before (Robotic):**
+```
+Found 83 results. Top 10:
+1. Health Care Services, Department of: $484,370,024.90
+2. Water Resources, Department of: $55,089,918.62
+...
+```
+
+**After (Natural & Engaging):**
+```
+Looking at spending across California's departments, Health Care
+Services absolutely dominates with $484M - that's nearly 65% of
+all procurement spending!
+
+**Health Care Services** leads the pack at $484.4M
+**Water Resources** comes in second at $55.1M
+**Transportation** rounds out the top three at $54.3M
+
+What really stands out is how concentrated the spending is - just
+these top 5 departments account for over 80% of the total budget.
+```
+
+**Personality:**
+- Conversational and warm (not robotic)
+- Enthusiastic about insights and patterns
+- Uses natural transitions
+- Tells a story with the data
+- Highlights surprising findings
+
+### 4. **Session Persistence** 🆕
+
+**Features:**
+- Sessions persist across page refreshes (localStorage)
+- View all past sessions in History modal
+- Load any previous conversation
+- Delete unwanted sessions
+- Create new sessions on demand
+- Active session highlighted
+
+**UI:**
+- **New Session** button - Start fresh conversation
+- **History** button - Browse all past sessions
+- **Clear Chat** button - Clear current session
+
+### 5. **Safety-Focused Guardrails** 🆕
+
+**Changed Approach:**
+- ❌ Old: Blocked non-procurement topics (prevented chat)
+- ✅ New: Safety checks only (allows chat + data queries)
+
+**What's Protected:**
+- Length limits (max 5000 chars)
+- Harmful content detection
+- Prompt injection attempts
+- Basic PII detection (emails, SSNs)
+- HTML/script tag stripping
+- XSS prevention
+
+**What's Allowed:**
+- Greetings and casual chat
+- Help requests
+- Data queries
+- Clarification questions
+
+### 6. **Intelligent Query System**
+
 - **Natural Language to MongoDB**: Converts questions like "How many purchases in 2014?" to MongoDB aggregation pipelines
-- **Function Calling**: Uses OpenAI's function calling API for structured query generation
+- **Function Calling**: Uses OpenAI's function calling API (`tool_choice="required"`) for structured query generation
 - **Date Handling**: Automatic datetime parsing with `__datetime__` placeholder system
 - **Query Validation**: Ensures valid MongoDB operations (find, aggregate, count)
-- **Error Recovery**: Helpful error messages and retry functionality
+- **Error Recovery**: Helpful error messages with retry functionality
 
-### Memory Management
-- **Short-Term Memory** (MongoDB):
-  - Stores recent conversation history
-  - Fast access for current session context
-  - Message-level granularity
+### 7. **Advanced Memory Management**
 
-- **Long-Term Memory** (ChromaDB):
-  - Semantic search using Sentence Transformers
-  - Stores meaningful Q&A pairs
-  - Smart duplicate detection (last 5 messages)
-  - Context retrieval for similar queries
+**Short-Term Memory (MongoDB):**
+- Stores recent conversation history
+- Fast access for current session context
+- Message-level granularity
+- Used for immediate context
 
-### Data Analysis Capabilities
+**Long-Term Memory (ChromaDB):**
+- Semantic search using Sentence Transformers
+- Stores meaningful Q&A pairs
+- Smart duplicate detection (last 5 messages)
+- Context retrieval for similar queries
+
+### 8. **Data Analysis Capabilities**
+
 - **Aggregations**: Group by department, supplier, date ranges
 - **Filtering**: Find orders by price, date, department
 - **Statistics**: Average, sum, count, min, max
 - **Sorting**: Order results by any field
 - **Date Operations**: Year, quarter, month-based analysis
 
-### User Interface
-- **Real-time Chat**: WebSocket-based instant messaging
-- **Resend Button**: One-click retry for failed queries (appears on last message only)
-- **Error Badges**: Visual indicators for query failures
-- **Responsive Design**: Works on desktop, tablet, and mobile
-- **Connection Status**: Live WebSocket connection indicator
+### 9. **Modern User Interface**
 
-### Security & Safety
-- **Input Guardrails**: Validates user queries before processing
-- **Output Guardrails**: Ensures safe and appropriate responses
-- **Session Management**: Isolated conversations per session
-- **MongoDB Injection Prevention**: Parameterized queries only
+- **Real-time Chat**: WebSocket-based instant messaging
+- **Smart Resend Button**: Automatically removes old responses when retrying
+- **Technical Details Modal**: View complete results + download options
+- **Welcome Message**: Fades on first user message
+- **Responsive Design**: Works on desktop, tablet, and mobile
+- **Professional Styling**: Calm color palette, smooth animations
+
+---
+
+## 🆕 What's New
+
+### Recent Updates
+
+#### **v2.0.0 - Multi-Agent Intelligence (Latest)**
+
+✨ **Major Features:**
+- **Multi-Agent Routing**: Automatic classification between data queries and general chat
+- **Chat Agent**: Handles greetings, help, and casual conversation
+- **Complete Data Access**: Technical Details modal shows ALL results with download buttons
+- **Natural Language Responses**: Engaging, conversational explanations
+- **Session Persistence**: Sessions persist across page refreshes
+- **Session History**: Browse, load, and manage all past conversations
+- **Safety Guardrails**: Focused on safety, not topic restriction
+
+🔧 **Improvements:**
+- LLM responses now tell a story with the data
+- Increased sample size from 5 to 15 for better summaries
+- Smart pagination awareness in responses
+- CSV and JSON download functionality
+- Fixed timezone issues in session timestamps
+- Improved resend button behavior (removes all subsequent messages)
+
+🐛 **Bug Fixes:**
+- Fixed router model name (gpt-4o-mini instead of gpt-5-mini)
+- Fixed welcome message persistence
+- Fixed messageId parameter order in JavaScript
+- Fixed session timestamp UTC conversion
 
 ---
 
@@ -97,199 +243,82 @@ The system features:
 
 ### High-Level Architecture
 
-```mermaid
-graph TB
-    subgraph "Client Layer"
-        UI[Web UI<br/>HTML/CSS/JS]
-        WS[WebSocket Client]
-    end
+```
+┌─────────────────────────────────────────────────────────────┐
+│                         User Input                           │
+└──────────────────────┬──────────────────────────────────────┘
+                       ↓
+┌─────────────────────────────────────────────────────────────┐
+│                   Safety Guardrails                          │
+│  • Length limits  • Harmful content  • PII detection         │
+└──────────────────────┬──────────────────────────────────────┘
+                       ↓
+┌─────────────────────────────────────────────────────────────┐
+│                    Router Agent (GPT-4o-mini)                │
+│  Classifies: data_query OR general_chat                     │
+└──────┬──────────────────────────────────────────┬───────────┘
+       │                                           │
+       ↓                                           ↓
+┌─────────────────────┐              ┌─────────────────────────┐
+│   Data Query Agent  │              │    General Chat Agent    │
+│   • MongoDB Query   │              │   • Greetings           │
+│   • LLM Explanation │              │   • Help & Guidance     │
+│   • Technical Data  │              │   • Conversation        │
+└─────────┬───────────┘              └──────────┬──────────────┘
+          │                                     │
+          ↓                                     ↓
+┌─────────────────────────────────────────────────────────────┐
+│                    Memory System                             │
+│  Short-term (MongoDB)  +  Long-term (ChromaDB)              │
+└─────────────────────────────────────────────────────────────┘
+```
 
-    subgraph "API Layer"
-        FastAPI[FastAPI Server<br/>main.py]
-        WebSocket[WebSocket Handler]
-        API[REST Endpoints]
-    end
+### Router Decision Logic
 
-    subgraph "Workflow Layer"
-        LG[LangGraph<br/>Multi-Agent Workflow]
-        Guard[Guardrails<br/>Input/Output]
-    end
+```
+Input: "Hello!"
+  ↓ Router Analysis
+  → Keywords: greeting, casual
+  → Decision: general_chat
+  → Route to: Chat Agent
+  → Response: "Hi! I'm here to help..."
 
-    subgraph "Agent Layer"
-        IG[Input Guardrails<br/>Validation]
-        MF[Memory Fetch<br/>Context Retrieval]
-        Agent[Procurement Agent<br/>Data Query Only]
-        MU[Memory Update<br/>Save History]
-        OG[Output Guardrails<br/>Safety Check]
-    end
-
-    subgraph "Query Layer"
-        QueryGen[MongoDB Query Agent<br/>NL → Query]
-        OpenAI[OpenAI Function Calling<br/>gpt-4o-mini]
-    end
-
-    subgraph "Data Layer"
-        Mongo[(MongoDB<br/>Procurement Data<br/>+ Short-term Memory)]
-        Chroma[(ChromaDB<br/>Long-term Memory<br/>+ Embeddings)]
-    end
-
-    UI --> WS
-    WS <--> FastAPI
-    UI --> API
-    FastAPI --> WebSocket
-    WebSocket --> LG
-
-    LG --> Guard
-    Guard --> IG
-    IG --> MF
-    MF --> Agent
-    Agent --> QueryGen
-    QueryGen --> OpenAI
-    QueryGen <--> Mongo
-    Agent --> MU
-    MU --> OG
-    OG --> FastAPI
-
-    MF <--> Chroma
-    MU --> Chroma
-    MU --> Mongo
-
-    style UI fill:#e1f5ff
-    style FastAPI fill:#fff4e1
-    style LG fill:#f0e1ff
-    style Agent fill:#e8f5e9
-    style Mongo fill:#e8f8f5
-    style Chroma fill:#e8f8f5
+Input: "What is the average order value?"
+  ↓ Router Analysis
+  → Keywords: what is, average, value (data question)
+  → Decision: data_query
+  → Route to: Data Agent
+  → MongoDB Query: { $group: { _id: null, avg: { $avg: "$total_price" }}}
+  → Response: "The average order value is approximately $237,301.49..."
 ```
 
 ### LangGraph Workflow
 
 ```mermaid
 graph TD
-    START([Start]) --> IG{Input<br/>Guardrails<br/>Enabled?}
+    START([User Message]) --> Guard[Safety Guardrails]
 
-    IG -->|Yes| IGN[Input Validation<br/>🛡️ Safety Check]
-    IG -->|No| MF
+    Guard -->|Safe| Router[Router Agent]
+    Guard -->|Unsafe| END[Reject]
 
-    IGN -->|Safe| MF[Memory Fetch<br/>📚 Get Context]
-    IGN -->|Unsafe| END
+    Router -->|data_query| DataAgent[Data Query Agent]
+    Router -->|general_chat| ChatAgent[Chat Agent]
 
-    MF --> Agent[Procurement Agent<br/>🎯 MongoDB Query]
+    DataAgent --> QueryGen[Generate MongoDB Query]
+    QueryGen --> Execute[Execute Query]
+    Execute --> Explain[LLM Explanation]
+    Explain --> Memory[Memory Update]
 
-    Agent --> QueryGen[Query Generation<br/>🤖 OpenAI Function Call]
-    QueryGen --> Execute[Execute Query<br/>💾 MongoDB Operation]
-    Execute --> Format[Format Results<br/>📊 LLM Explanation]
+    ChatAgent --> ChatLLM[Generate Response]
+    ChatLLM --> Memory
 
-    Format --> MU[Memory Update<br/>💿 Save History]
+    Memory --> Output[Output Guardrails]
+    Output --> END([Return Response])
 
-    MU --> Dedup{Duplicate<br/>Detection}
-    Dedup -->|New| SaveLT[Save to Long-term<br/>ChromaDB]
-    Dedup -->|Duplicate| Skip[Skip Long-term]
-
-    SaveLT --> OG
-    Skip --> OG
-
-    OG{Output<br/>Guardrails<br/>Enabled?}
-
-    OG -->|Yes| OGN[Output Validation<br/>🛡️ Safety Check]
-    OG -->|No| END
-
-    OGN --> END([End])
-
-    style START fill:#90EE90
-    style END fill:#FFB6C1
-    style IGN fill:#FFE4B5
-    style MF fill:#E0BBE4
-    style Agent fill:#87CEEB
-    style QueryGen fill:#B0E0E6
-    style MU fill:#E0BBE4
-    style OGN fill:#FFE4B5
-```
-
-### Query Generation Flow
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant UI
-    participant API
-    participant Workflow
-    participant Agent
-    participant QueryGen
-    participant OpenAI
-    participant MongoDB
-    participant LLM
-
-    User->>UI: "Find orders over $50,000"
-    UI->>API: WebSocket message
-    API->>Workflow: Process query
-    Workflow->>Agent: Route to procurement agent
-
-    Agent->>QueryGen: Generate MongoDB query
-    QueryGen->>OpenAI: Function call with schema
-    Note over OpenAI: Analyze query + schema<br/>Generate structured query
-    OpenAI-->>QueryGen: Query parameters
-
-    QueryGen->>QueryGen: Parse datetime placeholders
-    QueryGen->>MongoDB: Execute query
-    MongoDB-->>QueryGen: Raw results (100 max)
-
-    QueryGen->>QueryGen: Clean ObjectIds/dates
-    QueryGen->>LLM: Convert to human language
-    Note over LLM: Explain results<br/>in 1-2 sentences
-    LLM-->>QueryGen: Human-readable explanation
-
-    QueryGen-->>Agent: Formatted response
-    Agent-->>Workflow: Complete
-    Workflow->>API: Response + metadata
-    API-->>UI: Display results
-    UI-->>User: Shows answer + "Detailed" badge
-```
-
-### Memory System Flow
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant Workflow
-    participant MemFetch
-    participant MemUpdate
-    participant ShortTerm
-    participant LongTerm
-    participant Embedder
-
-    User->>Workflow: New query
-    Workflow->>MemFetch: Fetch context
-
-    MemFetch->>ShortTerm: Get recent messages (10)
-    ShortTerm-->>MemFetch: Recent history
-
-    MemFetch->>LongTerm: Semantic search
-    Note over LongTerm: Query embedding<br/>Find similar Q&A
-    LongTerm-->>MemFetch: Relevant context
-
-    MemFetch-->>Workflow: Combined context
-
-    Note over Workflow: Process query...<br/>Generate response
-
-    Workflow->>MemUpdate: Save conversation turn
-
-    MemUpdate->>ShortTerm: Save user + assistant message
-    ShortTerm-->>MemUpdate: Stored
-
-    MemUpdate->>MemUpdate: Check duplicates (last 5)
-
-    alt Not Duplicate
-        MemUpdate->>Embedder: Generate embedding
-        Embedder-->>MemUpdate: Vector
-        MemUpdate->>LongTerm: Store Q&A pair
-        LongTerm-->>MemUpdate: ✅ Saved
-    else Duplicate
-        MemUpdate-->>MemUpdate: ⏭️ Skip long-term
-        Note over MemUpdate: Prevents memory bloat<br/>from repeated queries
-    end
-
-    MemUpdate-->>Workflow: Complete
+    style Router fill:#FFE4B5
+    style DataAgent fill:#87CEEB
+    style ChatAgent fill:#98FB98
+    style Guard fill:#FFB6C1
 ```
 
 ---
@@ -297,17 +326,19 @@ sequenceDiagram
 ## 📁 Project Structure
 
 ```
-precurement_experiments/
+procurement_experiments/
 │
 ├── procurement_agent/                 # Main application package
 │   ├── api/                          # FastAPI application
-│   │   ├── main.py                   # FastAPI server & WebSocket handler
+│   │   ├── main.py                   # Server, WebSocket, REST endpoints
 │   │   └── __init__.py
 │   │
 │   ├── graph/                        # LangGraph workflow components
-│   │   ├── procurement_agent_node.py # Main agent (data-only)
+│   │   ├── router_node.py            # 🆕 Intent classification router
+│   │   ├── chat_agent_node.py        # 🆕 General conversation agent
+│   │   ├── procurement_agent_node.py # Data query agent
 │   │   ├── memory_nodes.py           # Memory fetch/update nodes
-│   │   ├── guardrails.py             # Input/output safety
+│   │   ├── guardrails.py             # 🆕 Safety-focused guardrails
 │   │   ├── duplicate_detection.py    # Smart deduplication
 │   │   └── __init__.py
 │   │
@@ -317,141 +348,23 @@ precurement_experiments/
 │   │   └── __init__.py
 │   │
 │   ├── prompts/                      # System prompts
-│   │   └── mongodb_system_prompt.txt # Query generation prompt
+│   │   └── prompts.py                # 🆕 Query generation + explanations
 │   │
 │   ├── static/                       # Frontend assets
-│   │   ├── index.html                # Chat interface
-│   │   ├── app.js                    # WebSocket client & UI logic
-│   │   └── style.css                 # Professional styling
+│   │   ├── index.html                # 🆕 Chat UI with session management
+│   │   ├── app.js                    # 🆕 WebSocket + download functionality
+│   │   └── style.css                 # 🆕 Professional styling
 │   │
-│   ├── mongodb_query.py              # MongoDB query agent
-│   ├── workflow.py                   # LangGraph workflow orchestration
+│   ├── mongodb_query.py              # 🆕 Enhanced query agent with natural responses
+│   ├── workflow.py                   # 🆕 Multi-agent LangGraph workflow
 │   ├── config.py                     # Configuration management
 │   └── __init__.py
 │
 ├── experiment.ipynb                  # Original Jupyter notebook
-├── inspriation/                      # Reference multi-agent system
 ├── requirements.txt                  # Python dependencies
 ├── .env.example                      # Environment variables template
 └── README.md                         # This file
 ```
-
----
-
-## 🔧 Components
-
-### 1. **Procurement Agent** (Data-Only)
-
-The core agent that ONLY answers questions using the procurement database.
-
-**Key Features:**
-- ✅ Always queries MongoDB (no general knowledge)
-- ✅ Uses LLM for error explanations
-- ✅ Detailed mode always enabled
-- ✅ Metadata tracking (query, count, success status)
-
-**File:** `procurement_agent/graph/procurement_agent_node.py`
-
-**Example Flow:**
-```
-User: "How many orders in 2014?"
-  ↓
-Agent: Generate MongoDB query
-  ↓
-MongoDB: Execute aggregation
-  ↓
-LLM: "There were 12,543 orders in 2014."
-```
-
-### 2. **MongoDB Query Agent**
-
-Converts natural language to MongoDB queries using OpenAI function calling.
-
-**Key Features:**
-- ✅ Automatic schema inference (samples 100 documents)
-- ✅ Supports find, aggregate, count operations
-- ✅ Date parsing with `__datetime__` placeholders
-- ✅ ObjectId and datetime serialization
-- ✅ Query validation and error handling
-- ✅ LLM-based result explanation
-
-**File:** `procurement_agent/mongodb_query.py`
-
-**Supported Operations:**
-```python
-# Find
-{"operation": "find", "filter": {"total_price": {"$gt": 50000}}}
-
-# Aggregate
-{"operation": "aggregate", "pipeline": [
-    {"$group": {"_id": "$department_name", "total": {"$sum": "$total_price"}}}
-]}
-
-# Count
-{"operation": "count", "filter": {"creation_date": {"$gte": {"__datetime__": "2014-01-01"}}}}
-```
-
-### 3. **Dual Memory System**
-
-**Short-Term Memory (MongoDB):**
-- Collection: `conversation_history`
-- Stores: Recent messages (last 10)
-- Purpose: Immediate context for current conversation
-- Fast lookup by session_id
-
-**Long-Term Memory (ChromaDB):**
-- Collection: `procurement_memory`
-- Stores: Q&A pairs with embeddings
-- Purpose: Semantic search for similar past queries
-- Smart duplicate detection (last 5 messages)
-
-**Files:**
-- `procurement_agent/memory/short_term.py`
-- `procurement_agent/memory/long_term.py`
-
-### 4. **Guardrails System**
-
-**Input Guardrails:**
-- Validates user queries before processing
-- Prevents prompt injection
-- Checks for harmful content
-
-**Output Guardrails:**
-- Validates agent responses
-- Ensures appropriate content
-- Filters sensitive information
-
-**File:** `procurement_agent/graph/guardrails.py`
-
-**Configuration:** Set `ENABLE_GUARDRAILS=true` in `.env`
-
-### 5. **WebSocket Handler**
-
-Real-time bidirectional communication for instant query results.
-
-**Features:**
-- ✅ Session-based connections
-- ✅ Automatic reconnection
-- ✅ Typing indicators
-- ✅ Error handling
-- ✅ Message tracking (for resend)
-
-**File:** `procurement_agent/api/main.py`
-
-### 6. **Frontend (Single-Page Chat UI)**
-
-**Components:**
-- Chat interface with message history
-- Resend button (appears on last message only)
-- Connection status indicator
-- Typing indicator during processing
-- Error badges for failed queries
-- Responsive design for all devices
-
-**Files:**
-- `procurement_agent/static/index.html`
-- `procurement_agent/static/app.js`
-- `procurement_agent/static/style.css`
 
 ---
 
@@ -538,192 +451,124 @@ Update `MONGO_URI` to point to your existing database.
 
 ```bash
 cd procurement_agent/api
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Access the application at: **http://localhost:8000**
 
 ---
 
-## ⚙️ Configuration
-
-### Environment Variables
-
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `OPENAI_API_KEY` | OpenAI API key | - | ✅ Yes |
-| `LLM_MODEL` | GPT model to use | `gpt-4o-mini` | No |
-| `MONGO_URI` | MongoDB connection string | `mongodb://localhost:27017` | ✅ Yes |
-| `MONGO_DB` | Database name | `procurement_db` | ✅ Yes |
-| `MONGO_COLLECTION` | Collection name | `purchase_orders` | ✅ Yes |
-| `ENABLE_GUARDRAILS` | Enable safety guardrails | `true` | No |
-| `SHORT_TERM_LIMIT` | Messages in short-term memory | `10` | No |
-| `LONG_TERM_TOP_K` | Relevant context to retrieve | `3` | No |
-
-### MongoDB Query Prompt
-
-Customize the query generation behavior by editing:
-
-**File:** `procurement_agent/prompts/mongodb_system_prompt.txt`
-
-**Key Sections:**
-- **Operations**: Available MongoDB operations
-- **Find Examples**: Sample find queries with filters
-- **Aggregation Examples**: Sample aggregation pipelines
-- **Date Syntax**: How to handle datetime fields
-- **Field Types**: Schema information
-- **Key Points**: Important rules and best practices
-
-### Memory Configuration
-
-Edit memory behavior in:
-
-**File:** `procurement_agent/graph/memory_nodes.py`
-
-```python
-# Duplicate detection lookback
-DUPLICATE_LOOKBACK = 5  # Check last 5 messages
-
-# Short-term memory
-SHORT_TERM_LIMIT = 10  # Recent messages to retrieve
-
-# Long-term memory
-LONG_TERM_TOP_K = 3  # Similar Q&A pairs to retrieve
-```
-
----
-
 ## 💻 Usage
 
-### 1. Start the Server
+### Example Conversations
 
-```bash
-cd procurement_agent/api
-uvicorn main:app --reload --port 8000
+#### **General Chat**
+```
+User: "Hello!"
+Agent: "Hi there! I'm your California Procurement Data Assistant.
+I can help you explore and analyze California state purchase orders
+over $5,000 from 2012-2015. Try asking me questions like 'What was
+the total spending by department?' or 'Show me the top suppliers!'"
 ```
 
-### 2. Open the UI
-
-Navigate to: **http://localhost:8000**
-
-### 3. Ask Data Questions
-
-The system is designed for **data-only** queries about California procurement:
-
-**✅ Good Queries:**
+#### **Data Query with Complete Results**
 ```
+User: "What was the total spending by department?"
+
+Agent: "Looking at spending across California's departments, Health
+Care Services absolutely dominates with $484M - that's nearly 65%
+of all procurement spending!
+
+**Health Care Services** leads the pack at $484.4M
+**Water Resources** comes in second at $55.1M
+**Transportation** rounds out the top three at $54.3M
+**Public Health** follows at $43.6M
+**Corrections and Rehabilitation** at $25.2M
+
+What really stands out is how concentrated the spending is - just
+these top 5 departments account for over 80% of the total budget.
+
+💡 Want the complete breakdown of all 83 departments? Click Technical
+Details below to see everything and download the data."
+
+[Technical Details Button]
+```
+
+Click "Technical Details" to see:
+- All 83 results in scrollable JSON
+- Download CSV button (opens in Excel)
+- Download JSON button (for analysis)
+- Exact MongoDB query used
+
+#### **Help Request**
+```
+User: "What can you do?"
+
+Agent: "Great question! I specialize in analyzing California state
+procurement data from 2012-2015. I can help you:
+
+• Find spending by department or supplier
+• Calculate averages and totals
+• Filter orders by price or date
+• Identify trends and patterns
+
+Just ask me natural questions like 'How many purchases in 2014?'
+or 'Show me orders over $50,000' and I'll dive into the data for you!"
+```
+
+### Supported Query Types
+
+**✅ Data Queries (Routed to Data Agent):**
 - "How many purchases were made in 2014?"
 - "What was the total spending by department?"
 - "Show me orders over $50,000"
 - "What is the average order value?"
-- "Which supplier had the most orders?"
-- "Find orders from Department of Transportation in 2013"
-```
+- "Top 5 suppliers by order count"
+- "Find orders from Department of Transportation"
 
-**❌ Will Not Answer:**
-```
-- "What is the capital of California?" (general knowledge)
-- "Tell me a joke" (not data-related)
-- "How do I file taxes?" (not procurement data)
-```
-
-### 4. Understanding Responses
-
-**Successful Query:**
-```
-User: "How many orders in 2014?"
-
-Agent: "There were 12,543 purchase orders in 2014."
-
-[Detailed badge shown]
-```
-
-**Failed Query:**
-```
-User: "Show me something"
-
-Agent: "I couldn't generate a valid query for your question.
-Please try rephrasing it to ask about the procurement data.
-For example: 'How many orders in 2014?' or 'What is the total spending?'"
-
-[Error badge shown] [Resend button appears]
-```
-
-### 5. Using the Resend Button
-
-If a query fails:
-1. A **resend button** (curved arrow icon) appears next to your last message
-2. Click it to retry the query
-3. The old response disappears
-4. A new response is generated
-5. Only the most recent message has the resend button
-
----
-
-## 📡 API Documentation
-
-### WebSocket Connection
-
-**Endpoint:** `ws://localhost:8000/ws/{session_id}`
-
-**Connect:**
-```javascript
-const sessionId = 'session_' + Date.now();
-const ws = new WebSocket(`ws://localhost:8000/ws/${sessionId}`);
-
-ws.onopen = () => {
-  console.log('Connected');
-};
-```
-
-**Send Message:**
-```javascript
-ws.send(JSON.stringify({
-  message: "How many orders in 2014?",
-  explain: true,  // Always true (detailed mode)
-  messageId: "msg_" + Date.now()
-}));
-```
-
-**Receive Response:**
-```javascript
-ws.onmessage = (event) => {
-  const data = JSON.parse(event.data);
-
-  if (data.type === 'message') {
-    console.log('Response:', data.message);
-    console.log('Metadata:', data.metadata);
-  }
-};
-```
-
-**Message Types:**
-- `system`: System notifications
-- `status`: Processing status (e.g., "typing")
-- `message`: Agent response with metadata
-- `error`: Error messages
-
-### REST API
-
-**Clear Session History**
-```http
-DELETE /sessions/{session_id}
-
-Response: { "message": "Session cleared" }
-```
-
-**Health Check**
-```http
-GET /health
-
-Response: { "status": "healthy", "mongodb": "connected" }
-```
+**✅ General Chat (Routed to Chat Agent):**
+- "Hello!", "Hi there!", "Hey!"
+- "Thanks!", "Thank you!"
+- "What can you do?"
+- "How does this work?"
+- "Can you help me?"
 
 ---
 
 ## 📊 Query Examples
 
-### 1. Simple Count
+### 1. Aggregation with Complete Data Access
+
+**Query:** "What was the total spending by department?"
+
+**Generated MongoDB:**
+```json
+{
+  "operation": "aggregate",
+  "pipeline": [
+    {"$group": {"_id": "$department_name", "total_spending": {"$sum": "$total_price"}}},
+    {"$sort": {"total_spending": -1}},
+    {"$limit": 100}
+  ]
+}
+```
+
+**Chat Response:**
+```
+Looking at spending across California's departments, Health Care
+Services absolutely dominates with $484M...
+
+[Shows top 15 results with insights]
+
+💡 Click Technical Details to see all 83 departments and download data.
+```
+
+**Technical Details Modal:**
+- Shows ALL 83 results
+- Download CSV: `query-results-1234567890.csv`
+- Download JSON: `query-results-1234567890.json`
+
+### 2. Simple Count Query
 
 **Query:** "How many purchases in 2014?"
 
@@ -738,25 +583,7 @@ Response: { "status": "healthy", "mongodb": "connected" }
 }
 ```
 
-**Response:** "There were 12,543 purchases in 2014."
-
-### 2. Aggregation by Department
-
-**Query:** "What is the total spending by department?"
-
-**Generated MongoDB:**
-```json
-{
-  "operation": "aggregate",
-  "pipeline": [
-    {"$group": {"_id": "$department_name", "total_spending": {"$sum": "$total_price"}}},
-    {"$sort": {"total_spending": -1}},
-    {"$limit": 10}
-  ]
-}
-```
-
-**Response:** "The top departments by spending are: Department of Transportation ($45.2M), Department of Corrections ($32.1M), ..."
+**Response:** "Looking at 2014, California made 12,543 procurement purchases totaling $156.7M across all departments."
 
 ### 3. Find with Filter
 
@@ -772,300 +599,75 @@ Response: { "status": "healthy", "mongodb": "connected" }
 }
 ```
 
-**Response:** "Found 1,234 orders over $50,000. The largest order was $2.3M for the Department of Transportation."
-
-### 4. Date Range Query
-
-**Query:** "Show me orders from May 2013"
-
-**Generated MongoDB:**
-```json
-{
-  "operation": "find",
-  "filter": {
-    "creation_date": {
-      "$gte": {"__datetime__": "2013-05-01"},
-      "$lt": {"__datetime__": "2013-06-01"}
-    }
-  },
-  "limit": 100
-}
-```
-
-**Response:** "There were 543 orders in May 2013, totaling $12.3M."
-
-### 5. Average Calculation
-
-**Query:** "What is the average order value per department?"
-
-**Generated MongoDB:**
-```json
-{
-  "operation": "aggregate",
-  "pipeline": [
-    {"$group": {"_id": "$department_name", "avg_value": {"$avg": "$total_price"}, "count": {"$sum": 1}}},
-    {"$sort": {"avg_value": -1}},
-    {"$limit": 10}
-  ]
-}
-```
-
-**Response:** "Department of Transportation has the highest average order value at $45,231, followed by Department of Corrections at $38,567."
+**Response:** "I found 1,234 orders over $50,000! The largest was a whopping $2.3M from the Department of Transportation. Here are the top orders..."
 
 ---
 
 ## 🧠 Architecture Decisions
 
-### Why Data-Only Agent?
+### Why Multi-Agent Routing?
 
-**Decision:** The agent ONLY answers questions using the procurement database.
+**Decision:** Separate agents for data queries vs. general chat
 
 **Rationale:**
-- ✅ **Focused Purpose**: Clear, specific use case
-- ✅ **Reduced Hallucinations**: No general knowledge = no false information
-- ✅ **Predictable Behavior**: Users know exactly what to expect
-- ✅ **Cost Efficient**: Smaller, faster models (gpt-4o-mini) work well
+- ✅ **Better UX**: System can greet users and provide help
+- ✅ **Specialized Agents**: Each agent excels at its specific task
+- ✅ **Flexible**: Easy to add more agent types in the future
+- ✅ **No Performance Impact**: Data queries go straight to MongoDB agent as before
+
+### Why Complete Data in Technical Details?
+
+**Decision:** Send ALL results to frontend (not just first 5)
+
+**Rationale:**
+- ✅ **User Need**: Users asking "What was X by Y?" need complete data
+- ✅ **Download Capability**: Enable CSV/JSON export for external analysis
+- ✅ **Transparency**: Users can verify and explore full results
+- ✅ **No Pagination Complexity**: Single modal shows everything
 
 **Implementation:**
-```python
-def procurement_agent_node(state: Dict) -> Dict:
-    # ALWAYS use MongoDB query agent
-    mongodb_agent = get_mongodb_agent()
-    result = mongodb_agent.query(user_message, explain=True)
-    # No general knowledge fallback
-```
+- Chat: Shows summary (top 10-15) + insights
+- Technical Details: ALL results + downloads
+- Best of both worlds: Quick overview + complete access
 
-### Why Dual Memory System?
+### Why Natural Language Responses?
 
-**Decision:** Short-term (MongoDB) + Long-term (ChromaDB)
+**Decision:** Make LLM responses engaging and conversational
 
 **Rationale:**
+- ✅ **Engagement**: Users prefer natural, story-driven explanations
+- ✅ **Insights**: Highlighting patterns makes data more actionable
+- ✅ **Readability**: Varied sentence structure is easier to scan
+- ✅ **Brand**: Professional yet approachable tone
 
-**Short-term Memory:**
-- ✅ Fast access to recent conversation (last 10 messages)
-- ✅ Simple key-value lookup by session_id
-- ✅ No embedding overhead
-- ✅ Perfect for immediate context
+**Before:** "Found 83 results. Top 10: 1. Health Care: $484M..."
+**After:** "Health Care Services absolutely dominates with $484M - that's nearly 65%!"
 
-**Long-term Memory:**
-- ✅ Semantic search for similar past queries
-- ✅ Learns from previous conversations
-- ✅ Helps with query variations ("orders" vs "purchases")
-- ✅ Smart duplicate detection
+### Why Session Persistence?
 
-**Alternative Considered:** Single memory system (rejected)
-- ❌ Too slow for recent context (embedding every lookup)
-- ❌ Too much storage for duplicates
-- ❌ No separation of concerns
-
-### Why Always-On Detailed Mode?
-
-**Decision:** Detailed explanations always enabled (no toggle)
+**Decision:** Store session ID in localStorage and restore on page load
 
 **Rationale:**
-- ✅ **Better UX**: Users always get clear explanations
-- ✅ **Simpler Code**: No conditional logic for modes
-- ✅ **Consistent Behavior**: Predictable responses
-- ✅ **Cost Acceptable**: gpt-4o-mini is inexpensive
+- ✅ **Better UX**: Users don't lose their work on accidental refresh
+- ✅ **Mobile Friendly**: Survives tab switches and app minimization
+- ✅ **History Management**: Easy to browse and resume old conversations
+- ✅ **Simple Implementation**: No server-side session management needed
 
-**Previous Implementation:** Had fast/detailed toggle
-- ❌ Users confused about which mode to use
-- ❌ Fast mode gave cryptic responses ("Total: 12543")
-- ❌ Added UI complexity
+### Why Safety-Only Guardrails?
 
-### Why Function Calling for Queries?
-
-**Decision:** Use OpenAI function calling instead of prompt-based query generation
+**Decision:** Check safety, not topics (router handles routing)
 
 **Rationale:**
-- ✅ **Structured Output**: Guaranteed valid JSON
-- ✅ **Type Safety**: Schema validation built-in
-- ✅ **Reliability**: Less hallucination in query syntax
-- ✅ **Debugging**: Clear function call arguments
+- ✅ **Separation of Concerns**: Router decides intent, guardrails ensure safety
+- ✅ **Flexibility**: Allows both chat and data queries
+- ✅ **Clear Responsibility**: Each component has one job
+- ✅ **Better Performance**: No redundant topic validation
 
-**Alternative Considered:** Prompt-based extraction (rejected)
-- ❌ Required extensive output parsing
-- ❌ More prone to syntax errors
-- ❌ Harder to validate
+**Protected:**
+- Harmful content, prompt injection, PII, XSS
 
-**Implementation:**
-
-The system uses OpenAI's function calling API with a defined tool schema:
-
-```python
-tools = [{
-    "type": "function",
-    "function": {
-        "name": "execute_mongodb_query",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "operation": {"type": "string", "enum": ["find", "aggregate", "count"]},
-                "filter": {"type": "object"},
-                "pipeline": {"type": "array"}
-            }
-        }
-    }
-}]
-```
-
-**Critical Detail:** The system prompt ends with `"Call execute_mongodb_query function."` - this explicit instruction tells the LLM to use function calling instead of responding with plain text. Without this instruction, even with `tool_choice="auto"`, the model might respond conversationally instead of generating a structured function call.
-
-**The Flow:**
-1. User asks: "How many orders in 2014?"
-2. LLM sees the instruction to call `execute_mongodb_query`
-3. LLM generates function call with parameters
-4. System executes the MongoDB query
-5. LLM explains results in natural language
-
-### Why Resend Button on Last Message Only?
-
-**Decision:** Only the most recent user message has a resend button
-
-**Rationale:**
-- ✅ **Clear Intent**: Users want to retry the last failed query
-- ✅ **Clean UI**: No button clutter on old messages
-- ✅ **Logical Flow**: Retrying old queries breaks conversation flow
-
-**Implementation:**
-```javascript
-addMessage(content, role, ...) {
-    if (role === 'user') {
-        this.removeAllResendButtons();  // Remove from previous messages
-        // Add button to current message
-    }
-}
-```
-
-### Why ChromaDB for Long-term Memory?
-
-**Decision:** Use ChromaDB instead of Pinecone/Weaviate/Qdrant
-
-**Rationale:**
-- ✅ **Local First**: No external API required
-- ✅ **Simple Setup**: pip install and go
-- ✅ **No Cost**: Free for any scale
-- ✅ **Python Native**: Great integration with Python stack
-
-**Alternative Considered:** Pinecone (rejected)
-- ❌ Requires API key and account
-- ❌ Costs money at scale
-- ❌ Network latency
-- ❌ Data leaves local environment
-
-### Why Sentence Transformers for Embeddings?
-
-**Decision:** Use local `all-MiniLM-L6-v2` model instead of OpenAI embeddings
-
-**Rationale:**
-- ✅ **No API Costs**: Free embeddings
-- ✅ **Fast**: Local inference, no network calls
-- ✅ **Good Quality**: 384-dimensional embeddings sufficient for this use case
-- ✅ **Privacy**: Data stays local
-
-**Trade-offs:**
-- ⚠️ Lower quality than OpenAI `text-embedding-ada-002`
-- ⚠️ Requires local compute (1-2GB RAM)
-- ✅ Acceptable for procurement Q&A use case
-
----
-
-## 🧪 Testing
-
-### Manual Testing
-
-**Test Query Generation:**
-```bash
-cd procurement_agent
-python -c "
-from mongodb_query import MongoDBQueryAgent
-from config import Config
-
-agent = MongoDBQueryAgent(
-    mongo_uri=Config.MONGO_URI,
-    db_name=Config.MONGO_DB,
-    collection_name=Config.MONGO_COLLECTION
-)
-
-result = agent.query('How many orders in 2014?', explain=True)
-print(result)
-"
-```
-
-**Test Memory System:**
-```bash
-cd procurement_agent
-python -c "
-from memory import ShortTermMemory, LongTermMemory
-
-# Short-term
-short = ShortTermMemory()
-short.add_message('session_1', 'user', 'Test query')
-messages = short.get_recent_messages('session_1', limit=10)
-print(f'Recent messages: {len(messages)}')
-
-# Long-term
-long = LongTermMemory()
-long.add_conversation_turn('session_1', 'user_1', 'Test query', 'Test response')
-context = long.get_relevant_context('Similar test query', top_k=3)
-print(f'Relevant context: {len(context)}')
-"
-```
-
-**Test Workflow:**
-```bash
-cd procurement_agent
-python -c "
-from workflow import create_workflow
-import asyncio
-
-async def test():
-    wf = create_workflow()
-    result = await wf.process(
-        user_message='How many orders in 2014?',
-        session_id='test_session',
-        explain=True
-    )
-    print(result)
-
-asyncio.run(test())
-"
-```
-
-### Integration Testing
-
-Test the complete WebSocket flow:
-
-```javascript
-// Run in browser console at http://localhost:8000
-const ws = new WebSocket('ws://localhost:8000/ws/test_session');
-
-ws.onopen = () => {
-  console.log('✅ Connected');
-  ws.send(JSON.stringify({
-    message: 'How many orders in 2014?',
-    explain: true,
-    messageId: 'test_1'
-  }));
-};
-
-ws.onmessage = (e) => {
-  const data = JSON.parse(e.data);
-  console.log('📩 Received:', data);
-};
-```
-
-### Load Testing
-
-Test concurrent connections:
-
-```bash
-# Install wrk (HTTP benchmarking tool)
-sudo apt-get install wrk
-
-# Test WebSocket connections
-wrk -t4 -c100 -d30s http://localhost:8000/
-```
+**Allowed:**
+- Greetings, help, data queries, clarifications
 
 ---
 
@@ -1081,7 +683,7 @@ We welcome contributions! Please follow these steps:
 3. **Make your changes**
 4. **Commit with clear messages:**
    ```bash
-   git commit -m 'Add: MongoDB aggregation optimization'
+   git commit -m 'Add: Multi-agent routing system'
    ```
 5. **Push to your branch:**
    ```bash
@@ -1107,9 +709,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🔗 Further Reading
 
-### Related Documentation
-- [MongoDB Query Agent Design](procurement_agent/mongodb_query.py)
-- [Memory System Implementation](procurement_agent/memory/)
+### Documentation
+- [Multi-Agent Routing](procurement_agent/graph/router_node.py)
+- [MongoDB Query Agent](procurement_agent/mongodb_query.py)
+- [Memory System](procurement_agent/memory/)
 - [LangGraph Workflow](procurement_agent/workflow.py)
 - [Guardrails Configuration](procurement_agent/graph/guardrails.py)
 
@@ -1118,7 +721,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [OpenAI Function Calling](https://platform.openai.com/docs/guides/function-calling)
 - [MongoDB Aggregation Pipeline](https://www.mongodb.com/docs/manual/core/aggregation-pipeline/)
 - [ChromaDB Documentation](https://docs.trychroma.com/)
-- [Sentence Transformers](https://www.sbert.net/)
 
 ---
 
@@ -1133,26 +735,18 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 📞 Support
-
-For issues, questions, or suggestions:
-- 🐛 **Report Bugs**: [Open an Issue](https://github.com/your-username/procurement-agent/issues)
-- 💬 **Discussions**: [Join Discussions](https://github.com/your-username/procurement-agent/discussions)
-- 📧 **Email**: your-email@example.com
-
----
-
 ## 📊 Project Stats
 
-- **Lines of Code**: ~2,000 (Python)
+- **Lines of Code**: ~3,500 (Python + JavaScript)
 - **Dependencies**: 15 core packages
-- **MongoDB Queries**: Find, Aggregate, Count
+- **Agents**: 3 (Router, Data Query, Chat)
 - **Memory System**: Dual (MongoDB + ChromaDB)
 - **Embedding Model**: all-MiniLM-L6-v2 (384 dims)
 - **LLM**: gpt-4o-mini (cost-optimized)
+- **Response Style**: Natural, conversational, engaging
 
 ---
 
 **Built with ❤️ using LangGraph, FastAPI, MongoDB, and ChromaDB**
 
-*A specialized data-query agent for California state procurement analysis (2012-2015)*
+*An intelligent multi-agent system for California state procurement analysis (2012-2015)*

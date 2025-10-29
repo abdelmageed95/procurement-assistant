@@ -8,6 +8,8 @@ from .guardrails import (
 )
 from .memory_nodes import memory_fetch_node, memory_update_node
 from .procurement_agent_node import procurement_agent_node
+from .router_node import router_node, should_route_to_data_agent
+from .chat_agent_node import chat_agent_node
 
 __all__ = [
     "input_guardrails_node",
@@ -15,5 +17,8 @@ __all__ = [
     "should_continue_after_validation",
     "memory_fetch_node",
     "memory_update_node",
-    "procurement_agent_node"
+    "procurement_agent_node",
+    "router_node",
+    "should_route_to_data_agent",
+    "chat_agent_node"
 ]

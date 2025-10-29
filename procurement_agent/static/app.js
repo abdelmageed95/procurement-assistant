@@ -2,7 +2,8 @@
 
 class ProcurementChat {
     constructor() {
-        this.sessionId = this.generateSessionId();
+        // Try to restore previous session from localStorage
+        this.sessionId = this.restoreOrCreateSession();
         this.ws = null;
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 5;
@@ -10,12 +11,49 @@ class ProcurementChat {
 
         this.initializeElements();
         this.attachEventListeners();
-        this.showWelcomeMessage();  // Show welcome message on initial load
+        this.loadCurrentSession();  // Load session history or show welcome
         this.connectWebSocket();
     }
 
     generateSessionId() {
         return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    restoreOrCreateSession() {
+        // Try to get existing session from localStorage
+        const savedSessionId = localStorage.getItem('currentSessionId');
+        if (savedSessionId) {
+            console.log('Restoring session:', savedSessionId);
+            return savedSessionId;
+        }
+
+        // Create new session
+        const newSessionId = this.generateSessionId();
+        localStorage.setItem('currentSessionId', newSessionId);
+        console.log('Created new session:', newSessionId);
+        return newSessionId;
+    }
+
+    async loadCurrentSession() {
+        try {
+            // Try to load session history
+            const response = await fetch(`/sessions/${this.sessionId}/history`);
+            const data = await response.json();
+
+            if (data.messages && data.messages.length > 0) {
+                // Session has history, load it
+                data.messages.forEach(msg => {
+                    this.addMessage(msg.content, msg.role, false, null, null);
+                });
+            } else {
+                // Empty session, show welcome message
+                this.showWelcomeMessage();
+            }
+        } catch (error) {
+            // Session doesn't exist or error loading, show welcome message
+            console.log('No previous session found, showing welcome');
+            this.showWelcomeMessage();
+        }
     }
 
     initializeElements() {
@@ -156,7 +194,7 @@ class ProcurementChat {
         const messageId = 'msg_' + Date.now();
 
         // Add user message to UI
-        this.addMessage(message, 'user', false, false, messageId);
+        this.addMessage(message, 'user', false, messageId, null);
 
         // Send message
         this.sendMessage(message, messageId);
@@ -196,14 +234,35 @@ class ProcurementChat {
             return;
         }
 
-        // Remove the old assistant response if exists
-        const historyEntry = this.messageHistory.get(messageId);
-        if (historyEntry && historyEntry.assistantMessageId) {
-            const oldResponse = document.querySelector(`[data-message-id="${historyEntry.assistantMessageId}"]`);
-            if (oldResponse) {
-                oldResponse.remove();
+        console.log('=== RESEND DEBUG ===');
+        console.log('Looking for messageId:', messageId);
+
+        // Find the user message element
+        const userMessageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+        console.log('Found user message element:', userMessageElement);
+
+        if (userMessageElement) {
+            // Get all messages in the container
+            const allMessages = Array.from(this.messagesContainer.children);
+            console.log('Total messages in container:', allMessages.length);
+
+            // Find the index of the user message
+            const userMessageIndex = allMessages.indexOf(userMessageElement);
+            console.log('User message index:', userMessageIndex);
+
+            // Remove all messages that come after this user message
+            if (userMessageIndex !== -1) {
+                console.log('Messages to remove:', allMessages.length - userMessageIndex - 1);
+                for (let i = userMessageIndex + 1; i < allMessages.length; i++) {
+                    console.log('Removing message:', allMessages[i]);
+                    allMessages[i].remove();
+                }
             }
+        } else {
+            console.log('ERROR: User message element not found!');
         }
+
+        console.log('===================');
 
         // Show typing indicator
         this.showTypingIndicator();
@@ -423,11 +482,6 @@ class ProcurementChat {
 
                 // Parse the ISO date string properly
                 const lastActivity = new Date(session.last_activity);
-                console.log('Session:', session.session_id);
-                console.log('  Raw last_activity:', session.last_activity);
-                console.log('  Parsed date:', lastActivity.toISOString());
-                console.log('  Current time:', new Date().toISOString());
-                console.log('  Diff in seconds:', Math.floor((new Date() - lastActivity) / 1000));
                 const timeAgo = this.getTimeAgo(lastActivity);
 
                 sessionItem.innerHTML = `
@@ -473,8 +527,9 @@ class ProcurementChat {
                 this.ws.close();
             }
 
-            // Update session ID
+            // Update session ID and save to localStorage
             this.sessionId = sessionId;
+            localStorage.setItem('currentSessionId', sessionId);
 
             // Clear UI
             this.messagesContainer.innerHTML = '';
@@ -535,8 +590,9 @@ class ProcurementChat {
             this.ws.close();
         }
 
-        // Generate new session ID
+        // Generate new session ID and save to localStorage
         this.sessionId = this.generateSessionId();
+        localStorage.setItem('currentSessionId', this.sessionId);
 
         // Clear UI
         this.messagesContainer.innerHTML = '';
@@ -566,15 +622,35 @@ class ProcurementChat {
     }
 
     showTechnicalDetails(technicalDetails) {
+        // Store for download
+        this.currentTechnicalDetails = technicalDetails;
+
         // Display query
         const queryDisplay = document.getElementById('queryDisplay');
         queryDisplay.textContent = JSON.stringify(technicalDetails.query, null, 2);
 
-        // Display result count
+        // Display result count with total information
         const resultCount = document.getElementById('resultCount');
-        resultCount.textContent = `Returned ${technicalDetails.result_count} result(s)`;
+        const totalCount = technicalDetails.total_count || technicalDetails.result_count;
+        const downloadCount = technicalDetails.raw_results ? technicalDetails.raw_results.length : 0;
+        const summaryCount = technicalDetails.shown_in_summary || technicalDetails.result_count;
 
-        // Display raw results (first 5)
+        // Build informative message
+        let countMessage = '';
+        if (totalCount > downloadCount) {
+            // Database has more than what's available for download
+            countMessage = `Total in database: ${totalCount.toLocaleString()} | Available for download: ${downloadCount.toLocaleString()} (limited for performance) | Shown in summary: ${summaryCount}`;
+        } else if (downloadCount > summaryCount) {
+            // Complete data available, but summary shows less
+            countMessage = `Total results: ${totalCount.toLocaleString()} | Complete data available below (${downloadCount.toLocaleString()} records) | Summary above shows top ${summaryCount}`;
+        } else {
+            // All data shown
+            countMessage = `Total results: ${totalCount.toLocaleString()}`;
+        }
+
+        resultCount.textContent = countMessage;
+
+        // Display ALL raw results
         const resultsDisplay = document.getElementById('resultsDisplay');
         if (technicalDetails.raw_results && technicalDetails.raw_results.length > 0) {
             resultsDisplay.textContent = JSON.stringify(technicalDetails.raw_results, null, 2);
@@ -582,8 +658,71 @@ class ProcurementChat {
             resultsDisplay.textContent = 'No results available';
         }
 
+        // Setup download buttons
+        const downloadCSV = document.getElementById('downloadCSV');
+        const downloadJSON = document.getElementById('downloadJSON');
+
+        downloadCSV.onclick = () => this.downloadResultsAsCSV(technicalDetails.raw_results);
+        downloadJSON.onclick = () => this.downloadResultsAsJSON(technicalDetails.raw_results);
+
         // Show modal
         this.technicalModal.style.display = 'flex';
+    }
+
+    downloadResultsAsCSV(results) {
+        if (!results || results.length === 0) {
+            alert('No results to download');
+            return;
+        }
+
+        // Convert JSON to CSV
+        const headers = Object.keys(results[0]);
+        const csvRows = [];
+
+        // Add header row
+        csvRows.push(headers.join(','));
+
+        // Add data rows
+        for (const row of results) {
+            const values = headers.map(header => {
+                const value = row[header];
+                // Escape values that contain commas or quotes
+                if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+                    return `"${value.replace(/"/g, '""')}"`;
+                }
+                return value;
+            });
+            csvRows.push(values.join(','));
+        }
+
+        const csvContent = csvRows.join('\n');
+
+        // Download
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `query-results-${Date.now()}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+
+    downloadResultsAsJSON(results) {
+        if (!results || results.length === 0) {
+            alert('No results to download');
+            return;
+        }
+
+        const jsonContent = JSON.stringify(results, null, 2);
+
+        // Download
+        const blob = new Blob([jsonContent], { type: 'application/json' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `query-results-${Date.now()}.json`;
+        a.click();
+        window.URL.revokeObjectURL(url);
     }
 
     closeTechnicalModal() {

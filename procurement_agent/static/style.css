@@ -588,6 +588,12 @@ textarea::placeholder {
     margin-bottom: var(--spacing-sm);
 }
 
+.download-buttons {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .container {

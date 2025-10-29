@@ -83,10 +83,12 @@ def procurement_agent_node(state: Dict) -> Dict:
         "success": result.get("success", False),
         "query": result.get("query", {}),
         "count": result.get("count", 0),
+        "total_count": result.get("total_count", 0),  # Actual total in database
         "error": result.get("error") if not result.get("success") else None
     }
 
     if result.get("data"):
-        state["query_results"] = result["data"]
+        state["query_results"] = result["data"]  # Limited results for summary
+        state["complete_results"] = result.get("complete_results", [])  # Complete results for downloads
 
     return state

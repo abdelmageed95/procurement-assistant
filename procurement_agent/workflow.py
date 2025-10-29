@@ -11,7 +11,10 @@ from .graph import (
     should_continue_after_validation,
     memory_fetch_node,
     memory_update_node,
-    procurement_agent_node
+    procurement_agent_node,
+    router_node,
+    should_route_to_data_agent,
+    chat_agent_node
 )
 
 
@@ -26,7 +29,7 @@ class ProcurementWorkflow:
         self.workflow = self._build_workflow()
 
     def _build_workflow(self):
-        """Build the LangGraph workflow"""
+        """Build the LangGraph workflow with router"""
         workflow = StateGraph(dict)
 
         # Add nodes
@@ -35,7 +38,9 @@ class ProcurementWorkflow:
             workflow.add_node("output_guardrails", output_guardrails_node)
 
         workflow.add_node("memory_fetch", memory_fetch_node)
-        workflow.add_node("procurement_agent", procurement_agent_node)
+        workflow.add_node("router", router_node)
+        workflow.add_node("data_agent", procurement_agent_node)  # Renamed for clarity
+        workflow.add_node("chat_agent", chat_agent_node)
         workflow.add_node("memory_update", memory_update_node)
 
         # Build edges
@@ -53,15 +58,41 @@ class ProcurementWorkflow:
                 }
             )
 
-            # Memory -> Agent -> Output Guardrails
-            workflow.add_edge("memory_fetch", "procurement_agent")
-            workflow.add_edge("procurement_agent", "output_guardrails")
+            # Memory -> Router -> [Data Agent OR Chat Agent]
+            workflow.add_edge("memory_fetch", "router")
+
+            # Router decides which agent to use
+            workflow.add_conditional_edges(
+                "router",
+                should_route_to_data_agent,
+                {
+                    "data_agent": "data_agent",
+                    "chat_agent": "chat_agent"
+                }
+            )
+
+            # Both agents go to output guardrails
+            workflow.add_edge("data_agent", "output_guardrails")
+            workflow.add_edge("chat_agent", "output_guardrails")
             workflow.add_edge("output_guardrails", "memory_update")
         else:
-            # No guardrails - direct flow
+            # No guardrails - direct flow with router
             workflow.add_edge(START, "memory_fetch")
-            workflow.add_edge("memory_fetch", "procurement_agent")
-            workflow.add_edge("procurement_agent", "memory_update")
+            workflow.add_edge("memory_fetch", "router")
+
+            # Router decides which agent to use
+            workflow.add_conditional_edges(
+                "router",
+                should_route_to_data_agent,
+                {
+                    "data_agent": "data_agent",
+                    "chat_agent": "chat_agent"
+                }
+            )
+
+            # Both agents go to memory update
+            workflow.add_edge("data_agent", "memory_update")
+            workflow.add_edge("chat_agent", "memory_update")
 
         workflow.add_edge("memory_update", END)
 
@@ -96,7 +127,9 @@ class ProcurementWorkflow:
             "metadata": {},
             "input_validation": {},
             "output_validation": {},
-            "query_results": []
+            "query_results": [],
+            "complete_results": [],  # For complete data downloads
+            "route": ""  # Will be set by router
         }
 
         try:
@@ -110,6 +143,7 @@ class ProcurementWorkflow:
                 "metadata": final_state["metadata"],
                 "memory_context": final_state["memory_context"].get("context_summary", ""),
                 "query_results": final_state.get("query_results", []),
+                "complete_results": final_state.get("complete_results", []),  # Complete results for downloads
                 "success": True
             }
 
@@ -123,6 +157,7 @@ class ProcurementWorkflow:
                 "metadata": {"error": str(e)},
                 "memory_context": "",
                 "query_results": [],
+                "complete_results": [],
                 "success": False
             }
 
@@ -144,7 +179,8 @@ class ProcurementWorkflow:
             "metadata": {},
             "input_validation": {},
             "output_validation": {},
-            "query_results": []
+            "query_results": [],
+            "route": ""  # Will be set by router
         }
 
         try:
