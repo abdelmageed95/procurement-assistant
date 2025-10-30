@@ -103,22 +103,22 @@ def main():
         passed, message = check_func()
 
         if passed:
-            print(f"✅ {message}")
+            print(f"[OK] {message}")
         else:
-            print(f"❌ {message}")
+            print(f"[FAILED] {message}")
             all_passed = False
 
     print()
     print("=" * 80)
 
     if all_passed:
-        print("✅ All checks passed! You're ready to start the server.")
+        print("All checks passed! You're ready to start the server.")
         print()
         print("Run: python run_server.py")
         print("=" * 80)
         return 0
     else:
-        print("❌ Some checks failed. Please fix the issues above.")
+        print("Some checks failed. Please fix the issues above.")
         print()
         print("Common fixes:")
         print("  - Set API key: export OPENAI_API_KEY='your-key'")

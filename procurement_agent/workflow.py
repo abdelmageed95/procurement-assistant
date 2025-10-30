@@ -115,7 +115,7 @@ class ProcurementWorkflow:
         Returns:
             Dict with response and metadata
         """
-        print(f"\n🚀 Processing: {user_message[:60]}...")
+        print(f"\nProcessing: {user_message[:60]}...")
 
         # Initial state
         initial_state = {
@@ -136,7 +136,7 @@ class ProcurementWorkflow:
             # Run workflow
             final_state = await self.workflow.ainvoke(initial_state)
 
-            print("✅ Workflow completed")
+            print("Workflow completed")
 
             return {
                 "response": final_state["agent_response"],
@@ -148,7 +148,7 @@ class ProcurementWorkflow:
             }
 
         except Exception as e:
-            print(f"❌ Workflow error: {e}")
+            print(f"Workflow error: {e}")
             return {
                 "response": (
                     "I encountered an error processing your request. "
@@ -168,7 +168,7 @@ class ProcurementWorkflow:
         user_id: str = "default"
     ) -> Dict[str, Any]:
         """Synchronous version of process"""
-        print(f"\n🚀 Processing (sync): {user_message[:60]}...")
+        print(f"\nProcessing (sync): {user_message[:60]}...")
 
         initial_state = {
             "user_message": user_message,
@@ -186,7 +186,7 @@ class ProcurementWorkflow:
         try:
             final_state = self.workflow.invoke(initial_state)
 
-            print("✅ Workflow completed (sync)")
+            print("Workflow completed (sync)")
 
             return {
                 "response": final_state["agent_response"],
@@ -197,7 +197,7 @@ class ProcurementWorkflow:
             }
 
         except Exception as e:
-            print(f"❌ Workflow error (sync): {e}")
+            print(f"Workflow error (sync): {e}")
             return {
                 "response": (
                     "I encountered an error processing your request. "

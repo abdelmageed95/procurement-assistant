@@ -106,7 +106,7 @@ def memory_update_node(state: Dict) -> Dict:
     for msg in reversed(recent_messages):
         if msg.get("role") == "user" and msg.get("content", "").strip() == user_message.strip():
             is_duplicate = True
-            print(f"⚠️  Duplicate message detected: '{user_message[:50]}...'")
+            print(f"[WARNING] Duplicate message detected: '{user_message[:50]}...'")
             break
 
     # Always add to short-term memory (for conversation flow)
@@ -134,8 +134,8 @@ def memory_update_node(state: Dict) -> Dict:
             assistant_response=agent_response,
             metadata=state.get("metadata", {})
         )
-        print(f"✅ Memory updated for session {session_id}")
+        print(f"Memory updated for session {session_id}")
     else:
-        print(f"⏭️  Skipped long-term storage (duplicate)")
+        print(f"Skipped long-term storage (duplicate)")
 
     return state

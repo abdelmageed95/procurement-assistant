@@ -123,7 +123,7 @@ def input_guardrails_node(state: Dict) -> Dict:
     """
     from ..config import Config
 
-    print("🛡️  Input Guardrails: Validating user input...")
+    print("Input Guardrails: Validating user input...")
 
     guardrails = SafetyGuardrails(openai_api_key=Config.OPENAI_API_KEY)
 
@@ -140,13 +140,13 @@ def input_guardrails_node(state: Dict) -> Dict:
     }
 
     if not is_valid:
-        print(f"   ❌ Validation failed: {error_msg}")
+        print(f"   [FAILED] Validation failed: {error_msg}")
         state["validation_failed"] = True
         state["agent_response"] = f"Sorry, your input couldn't be processed: {error_msg}"
     else:
-        print(f"   ✅ Validation passed")
+        print(f"   [OK] Validation passed")
         if metadata.get("warnings"):
-            print(f"   ⚠️  Warnings: {', '.join(metadata['warnings'])}")
+            print(f"   [WARNING] Warnings: {', '.join(metadata['warnings'])}")
         state["validation_failed"] = False
 
     print(f"   Checks: {', '.join(metadata.get('checks_performed', []))}")
@@ -161,11 +161,11 @@ def output_guardrails_node(state: Dict) -> Dict:
     """
     from ..config import Config
 
-    print("🛡️  Output Guardrails: Sanitizing agent response...")
+    print("Output Guardrails: Sanitizing agent response...")
 
     # Skip if validation failed earlier
     if state.get("validation_failed", False):
-        print("   ⏭️  Skipping (input validation failed)")
+        print("   Skipping (input validation failed)")
         return state
 
     guardrails = SafetyGuardrails(openai_api_key=Config.OPENAI_API_KEY)
@@ -180,7 +180,7 @@ def output_guardrails_node(state: Dict) -> Dict:
         "metadata": metadata
     }
 
-    print(f"   ✅ Sanitization complete")
+    print(f"   [OK] Sanitization complete")
     if metadata.get("sanitization_performed"):
         print(f"   Actions: {', '.join(metadata['sanitization_performed'])}")
 

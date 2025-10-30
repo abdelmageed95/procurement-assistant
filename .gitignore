@@ -32,6 +32,7 @@ data/procurement_data.db-journal
 data/sessions.json
 data/sessions_backup_*.json
 logs/
+eval/
 
 #csv files
 *.csv

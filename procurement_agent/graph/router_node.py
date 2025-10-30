@@ -68,7 +68,7 @@ Respond with ONLY ONE WORD: either "data_query" or "general_chat"
         route = "data_query"
 
     state["route"] = route
-    print(f"🔀 Router: '{user_message[:50]}...' -> {route}")
+    print(f"Router: '{user_message[:50]}...' -> {route}")
 
     return state
 

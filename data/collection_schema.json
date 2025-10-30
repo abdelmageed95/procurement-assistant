@@ -1,11 +1,11 @@
 {
   "creation_date": {
     "sample_values": [
-      "2013-07-10 00:00:00",
-      "2015-03-19 00:00:00",
-      "2013-05-28 00:00:00",
-      "2012-08-01 00:00:00",
-      "2012-10-16 00:00:00"
+      "2012-12-18 00:00:00",
+      "2013-11-13 00:00:00",
+      "2013-12-26 00:00:00",
+      "2013-04-02 00:00:00",
+      "2014-01-21 00:00:00"
     ],
     "type": "datetime",
     "nullable": false,
@@ -14,25 +14,25 @@
   },
   "purchase_date": {
     "sample_values": [
-      "2013-06-28 00:00:00",
-      "None",
-      "2015-03-17 00:00:00",
-      "2013-05-28 00:00:00",
-      "2012-10-16 00:00:00"
+      "2013-12-19 00:00:00",
+      "2013-11-13 00:00:00",
+      "2012-12-21 00:00:00",
+      "2013-04-02 00:00:00",
+      "2014-01-21 00:00:00"
     ],
     "type": "datetime",
     "nullable": true,
-    "null_percentage": 8.0,
+    "null_percentage": 1.0,
     "description": "Date of purchase order entered by the user; may be backdated, so creation date is primarily used.",
     "note": "Datetime object - use for date queries (creation_date preferred)"
   },
   "creation_date_str": {
     "sample_values": [
-      "03/19/2015",
-      "08/01/2012",
-      "10/16/2012",
-      "07/10/2013",
-      "05/28/2013"
+      "04/02/2013",
+      "12/26/2013",
+      "11/13/2013",
+      "12/18/2012",
+      "01/21/2014"
     ],
     "type": "str",
     "nullable": false,
@@ -40,22 +40,22 @@
   },
   "purchase_date_str": {
     "sample_values": [
-      "None",
-      "03/17/2015",
-      "10/16/2012",
-      "06/28/2013",
-      "05/28/2013"
+      "12/19/2013",
+      "12/21/2012",
+      "11/13/2013",
+      "04/02/2013",
+      "01/21/2014"
     ],
     "type": "str",
     "nullable": true,
-    "null_percentage": 8.0,
+    "null_percentage": 1.0,
     "note": "Display only - use non-_str version for queries"
   },
   "fiscal_year": {
     "sample_values": [
       "2014-2015",
-      "2012-2013",
-      "2013-2014"
+      "2013-2014",
+      "2012-2013"
     ],
     "type": "str",
     "nullable": false,
@@ -63,24 +63,24 @@
   },
   "lpa_number": {
     "sample_values": [
-      "1-14-26-01D",
-      "None",
-      "1-13-89-126",
-      "5-13-89-15",
-      "1-11-70-04E"
+      "1-13-70-01A",
+      "1-11-87-17A",
+      "1-09-70-01B",
+      "B27164",
+      "None"
     ],
     "type": "str",
     "nullable": true,
-    "null_percentage": 68.0,
+    "null_percentage": 75.0,
     "description": "Leveraged Procurement Agreement (Contract Number). Indicates contract spend if present."
   },
   "purchase_order_number": {
     "sample_values": [
-      "4500155834",
-      "PR458171",
-      "4600008964",
-      "P1300018",
-      "REQ0009041"
+      "PO222319",
+      "4500207267",
+      "4D240761",
+      "X1271",
+      "LM130415"
     ],
     "type": "str",
     "nullable": false,
@@ -88,23 +88,19 @@
   },
   "requisition_number": {
     "sample_values": [
-      "None",
-      "REQ0013467",
-      "REQ0012335",
-      "REQ0008985",
-      "REQ0009041"
+      "None"
     ],
-    "type": "str",
+    "type": "NoneType",
     "nullable": true,
-    "null_percentage": 93.0,
+    "null_percentage": 100.0,
     "description": "Requisition identifier; not unique across departments."
   },
   "acquisition_type": {
     "sample_values": [
-      "NON-IT Services",
+      "IT Services",
       "NON-IT Goods",
       "IT Goods",
-      "IT Services"
+      "NON-IT Services"
     ],
     "type": "str",
     "nullable": false,
@@ -112,24 +108,24 @@
   },
   "sub_acquisition_type": {
     "sample_values": [
-      "Agreements with other governmental entities and public universities",
+      "Interagency Agreements",
+      "Expert Witneses",
       "None",
-      "Services are specifically exempt by statute",
-      "Public Works",
-      "Hazardous Activities"
+      "Subvention and Local Assistance",
+      "Emergency Contract"
     ],
     "type": "str",
     "nullable": true,
-    "null_percentage": 78.0,
+    "null_percentage": 80.0,
     "description": "Depends on the acquisition type used."
   },
   "acquisition_method": {
     "sample_values": [
       "Informal Competitive",
-      "Services are specifically exempt by statute",
-      "Master Purchase/Price Agreement",
-      "SB/DVBE Option",
-      "Statewide Contract"
+      "Emergency Purchase",
+      "Formal Competitive",
+      "Statewide Contract",
+      "WSCA/Coop"
     ],
     "type": "str",
     "nullable": false,
@@ -137,23 +133,23 @@
   },
   "sub_acquisition_method": {
     "sample_values": [
-      "Only goods and services that meet needs of the State",
+      "Prison Industry Authority (PIA)",
+      "Services are specifically exempt by statute",
       "None",
-      "Fleet",
-      "Prison Industry Authority (PIA)"
+      "Fleet"
     ],
     "type": "str",
     "nullable": true,
-    "null_percentage": 93.0,
+    "null_percentage": 95.0,
     "description": "Depends on the acquisition method used."
   },
   "department_name": {
     "sample_values": [
-      "Developmental Services, Department of",
-      "Franchise Tax Board",
-      "Water Resources, Department of",
+      "Justice, Department of",
       "Corrections and Rehabilitation, Department of",
-      "Consumer Affairs, Department of"
+      "Forestry and Fire Protection, Department of",
+      "Fish and Wildlife, Department of",
+      "Conservation, Department of"
     ],
     "type": "str",
     "nullable": false,
@@ -161,11 +157,11 @@
   },
   "supplier_code": {
     "sample_values": [
-      "1758151",
-      "13274",
-      "1056600",
-      "29677",
-      "23836"
+      "1000531",
+      "1249060",
+      "1026437",
+      "15228",
+      "1006632"
     ],
     "type": "str",
     "nullable": false,
@@ -173,11 +169,11 @@
   },
   "supplier_name": {
     "sample_values": [
-      "U.S. Army Corp of Engineers (USACE)",
-      "Angus Hamer Networking",
-      "US Foodservice",
-      "California Veteran Supply Inc.",
-      "Western Blue Corporation"
+      "Western Blue/Insight/Hewlett Packard",
+      "THE PRIMARY SOURCE",
+      "Alldata LLC",
+      "HEWLETT PACKARD",
+      "Bio-Oregon"
     ],
     "type": "str",
     "nullable": false,
@@ -185,33 +181,34 @@
   },
   "supplier_qualifications": {
     "sample_values": [
-      "CA-MB CA-SB CA-SBE",
+      "CA-DVBE CA-SB CDVBE",
+      "CA-MB CA-SB CA-SBE SB",
+      "CA-MB CA-SB",
       "None",
-      "CA-DVBE CA-SB CA-SBE CDVBE",
-      "CA-SB",
-      "CA-SB CA-SBE"
+      "CA-DVBE CA-MB CA-SB DBE SB"
     ],
     "type": "str",
     "nullable": true,
-    "null_percentage": 57.0,
+    "null_percentage": 61.0,
     "description": "Identifies supplier as SB, SBE, DVBE, NP, or MB; can be multiple categories."
   },
   "supplier_zip_code": {
     "sample_values": [
-      "None",
-      "93612",
+      "95742",
+      "95758",
+      "98632",
       "95827",
-      "95814",
-      "95621"
+      "40511-1273"
     ],
     "type": "str",
     "nullable": true,
-    "null_percentage": 19.0,
+    "null_percentage": 13.0,
     "description": "Supplier zip code."
   },
   "cal_card": {
     "sample_values": [
-      "NO"
+      "NO",
+      "YES"
     ],
     "type": "str",
     "nullable": false,
@@ -219,11 +216,11 @@
   },
   "item_name": {
     "sample_values": [
-      "National Environmental Policy Act",
-      "MISC FOOD ITEMS AND FRESH PRODUCE FOR THE WEEK OF 3/9/15-3/13/15",
-      "Samsung CLT-M609S, Magenta Toner Cartridge, 7,000 Pages Yield",
-      "Software maintenance",
-      "Towels, bath white 20x40"
+      "Fish Food",
+      "Ca Electronic Waste Recycling Fee",
+      "8 OZ. CUPS W/LIDS",
+      "Alldata 1 YR Renewal ALL DATA",
+      "printers"
     ],
     "type": "str",
     "nullable": false,
@@ -231,11 +228,11 @@
   },
   "item_description": {
     "sample_values": [
-      "The purpose of this agreement is to establish a mutual framework\ngoverning the respective responsibilities of the parties for the\nacceptance and expenditure of funds contributed by DWR to provide for\nthe Army Corps taking the lead under the National Envir",
-      "MISC FOOD ITEMS AND FRESH PRODUCE FOR THE WEEK OF 3/9/15-3/13/15",
-      "Samsung CLT-M609S, Magenta Toner Cartridge, 7,000 Pages Yield",
-      "Software maintenance",
-      "Towels, bath white 20x40"
+      "Ca Electronic Waste Recycling Fee",
+      "8 OZ. CUPS W/LIDS",
+      "License fe",
+      "HP LaserJet Enterprise P3015dn Printer Monochrome",
+      "Bio Vita Fry 1.2mm"
     ],
     "type": "str",
     "nullable": false,
@@ -243,11 +240,11 @@
   },
   "quantity": {
     "sample_values": [
-      "4",
-      "275",
-      "1",
-      "2957.5",
-      "25"
+      "880",
+      "30",
+      "6",
+      "5",
+      "1"
     ],
     "type": "int",
     "nullable": false,
@@ -256,11 +253,11 @@
   },
   "unit_price": {
     "sample_values": [
-      "113.0",
-      "545180.0",
-      "31989.0",
-      "10.8",
-      "11341.21"
+      "108.09",
+      "1500.0",
+      "1.73",
+      "4.0",
+      "708.2"
     ],
     "type": "float",
     "nullable": false,
@@ -269,11 +266,11 @@
   },
   "total_price": {
     "sample_values": [
-      "2970.0",
-      "452.0",
-      "545180.0",
-      "31989.0",
-      "11341.21"
+      "3541.0",
+      "1500.0",
+      "3242.7",
+      "24.0",
+      "1522.4"
     ],
     "type": "float",
     "nullable": false,
@@ -282,11 +279,11 @@
   },
   "unit_price_str": {
     "sample_values": [
-      "$10.80",
-      "$545180.00",
-      "$11341.21",
-      "$113.00",
-      "$31989.00"
+      "$1.73",
+      "$4.00",
+      "$708.20",
+      "$1500.00",
+      "$108.09"
     ],
     "type": "str",
     "nullable": false,
@@ -294,11 +291,11 @@
   },
   "total_price_str": {
     "sample_values": [
-      "$452.00",
-      "$2970.00",
-      "$545180.00",
-      "$11341.21",
-      "$31989.00"
+      "$3242.70",
+      "$1522.40",
+      "$3541.00",
+      "$1500.00",
+      "$24.00"
     ],
     "type": "str",
     "nullable": false,
@@ -306,11 +303,11 @@
   },
   "classification_codes": {
     "sample_values": [
-      "81112205",
-      "44103103",
-      "52121701",
-      "10131701\n10131702",
-      "10151523\n12164504\n30151507\n50111514\n50111516\n50111522\n50112011\n50121537\n50131609\n50131701\n50131801\n50151513\n50171550\n50171831\n50171832\n50181909\n50182004\n50191507\n50192303\n50192901\n50193103\n50193201\n50201706\n50201714\n50202503\n50202601\n50202706\n50221201\n511"
+      "76122408",
+      "10121702",
+      "48101905",
+      "43212105",
+      "93151517"
     ],
     "type": "str",
     "nullable": false,
@@ -318,11 +315,11 @@
   },
   "normalized_unspsc": {
     "sample_values": [
-      "10151523",
-      "81112205",
-      "44103103",
-      "52121701",
-      "10131701"
+      "76122408",
+      "10121702",
+      "48101905",
+      "43212105",
+      "93151517"
     ],
     "type": "str",
     "nullable": false,
@@ -330,104 +327,97 @@
   },
   "commodity_title": {
     "sample_values": [
-      "Cauliflower seeds or seedlings",
-      "Database management system software maintenance",
-      "Bath towels",
-      "Printer or facsimile toner",
-      "Terrariums"
+      "State county local waste or recycle fee",
+      "Food service cups or mugs",
+      "License or registration fee",
+      "Laser printers",
+      "Fish food pellets"
     ],
     "type": "str",
-    "nullable": true,
-    "null_percentage": 1.0,
+    "nullable": false,
     "description": "Commodity title correlated with the 8-digit Normalized UNSPSC."
   },
   "class": {
     "sample_values": [
-      "81112200",
-      "44103100",
-      "10131700",
-      "10151500",
-      "52121700"
+      "43212100",
+      "10121700",
+      "93151500",
+      "48101900",
+      "76122400"
     ],
     "type": "str",
-    "nullable": true,
-    "null_percentage": 1.0,
+    "nullable": false,
     "description": "Class number correlated with the 8-digit Normalized UNSPSC."
   },
   "class_title": {
     "sample_values": [
-      "Animal habitats",
-      "Printer and facsimile and photocopier supplies",
-      "Vegetable seeds and seedlings",
-      "Software maintenance and support",
-      "Towels"
+      "Refuse disposal and treatment fees",
+      "Public administration",
+      "Tabletop and serving equipment",
+      "Fish food",
+      "Computer printers"
     ],
     "type": "str",
-    "nullable": true,
-    "null_percentage": 1.0,
+    "nullable": false,
     "description": "Class title correlated with the 8-digit Normalized UNSPSC."
   },
   "family": {
     "sample_values": [
-      "81110000",
-      "10130000",
-      "44100000",
-      "10150000",
-      "52120000"
+      "93150000",
+      "76120000",
+      "48100000",
+      "10120000",
+      "43210000"
     ],
     "type": "str",
-    "nullable": true,
-    "null_percentage": 1.0,
+    "nullable": false,
     "description": "Family number correlated with the 8-digit Normalized UNSPSC."
   },
   "family_title": {
     "sample_values": [
-      "Seeds and bulbs and seedlings and cuttings",
-      "Computer services",
-      "Office machines and their supplies and accessories",
-      "Animal containment and habitats",
-      "Bedclothes and table and kitchen linen and towels"
+      "Computer Equipment and Accessories",
+      "Institutional food services equipment",
+      "Public administration and finance services",
+      "Refuse disposal and treatment",
+      "Animal feed"
     ],
     "type": "str",
-    "nullable": true,
-    "null_percentage": 1.0,
+    "nullable": false,
     "description": "Family title correlated with the 8-digit Normalized UNSPSC."
   },
   "segment": {
     "sample_values": [
-      "21000000",
-      "44000000",
-      "10000000",
-      "52000000",
-      "81000000"
+      "93000000",
+      "48000000",
+      "76000000",
+      "43000000",
+      "10000000"
     ],
     "type": "str",
-    "nullable": true,
-    "null_percentage": 1.0,
+    "nullable": false,
     "description": "Segment number correlated with the 8-digit Normalized UNSPSC."
   },
   "segment_title": {
     "sample_values": [
-      "Office Equipment and Accessories and Supplies",
-      "Engineering and Research and Technology Based Services",
-      "Farming and Fishing and Forestry and Wildlife Machinery and Accessories",
-      "Domestic Appliances and Supplies and Consumer Electronic Products",
-      "Live Plant and Animal Material and Accessories and Supplies"
+      "Politics and Civic Affairs Services",
+      "Industrial Cleaning Services",
+      "Live Plant and Animal Material and Accessories and Supplies",
+      "Information Technology Broadcasting and Telecommunications",
+      "Service Industry Machinery and Equipment and Supplies"
     ],
     "type": "str",
-    "nullable": true,
-    "null_percentage": 1.0
+    "nullable": false
   },
   "location": {
     "sample_values": [
-      "None",
+      "95742\n(38.585855, -121.217204)",
+      "40511-1273\n(38.112378, -84.499472)",
       "95827\n(38.563097, -121.328511)",
-      "95814\n(38.580427, -121.494396)",
-      "95621\n(38.695315, -121.308889)",
-      "93612\n(36.815415, -119.711438)"
+      "95758\n(38.424655, -121.438065)",
+      "98632\n(46.173162, -123.011746)"
     ],
     "type": "str",
     "nullable": true,
-    "null_percentage": 19.0
+    "null_percentage": 13.0
   }
 }

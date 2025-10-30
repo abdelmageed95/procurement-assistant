@@ -165,7 +165,7 @@ class MongoDBQueryAgent:
         with open(schema_file, 'w', encoding='utf-8') as f:
             json.dump(self.schema, f, indent=2, ensure_ascii=False)
 
-        print(f"✅ Schema saved to: {schema_file}")
+        print(f"Schema saved to: {schema_file}")
 
     def _parse_datetime_placeholders(self, query):
         """Parse datetime placeholders to Python datetime objects"""
@@ -428,7 +428,7 @@ class MongoDBQueryAgent:
             query_params = json.loads(tool_call_any.function.arguments)
 
             # Log the generated query
-            print(f"\n📝 Generated query: {json.dumps(query_params, indent=2, default=str)}")
+            print(f"\nGenerated query: {json.dumps(query_params, indent=2, default=str)}")
 
             # Execute query
             results = self._execute_query(query_params)
@@ -582,7 +582,7 @@ FORMATTING RULES:
 2. Use conversational intros: "Looking at the data...", "Here's what I found...", "Interesting results here..."
 3. Mix narrative with data points
 4. Highlight surprising insights with natural reactions
-5. Use emojis sparingly for emphasis (📊 💰 ⭐)
+5. Use natural language without emojis
 6. Format numbers clearly: $484M (not 484000000), $55.1M, etc.
 7. If partial results, naturally suggest: "Want to see all the details? Check out the Technical Details button below"
 
@@ -609,7 +609,7 @@ Write: "Looking at spending across California's departments, Health Care Service
 
 What really stands out is how concentrated the spending is - just these top 5 departments account for over 80% of the total budget.
 
-💡 Want the complete breakdown of all 83 departments? Click Technical Details below to see everything and download the data."
+Want the complete breakdown of all 83 departments? Click Technical Details below to see everything and download the data."
 """
                     },
                     {"role": "user", "content": context},
