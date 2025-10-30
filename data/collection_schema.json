@@ -1,0 +1,433 @@
+{
+  "creation_date": {
+    "sample_values": [
+      "2013-07-10 00:00:00",
+      "2015-03-19 00:00:00",
+      "2013-05-28 00:00:00",
+      "2012-08-01 00:00:00",
+      "2012-10-16 00:00:00"
+    ],
+    "type": "datetime",
+    "nullable": false,
+    "description": "System Date",
+    "note": "Datetime object - use for date queries with $gte, $lte"
+  },
+  "purchase_date": {
+    "sample_values": [
+      "2013-06-28 00:00:00",
+      "None",
+      "2015-03-17 00:00:00",
+      "2013-05-28 00:00:00",
+      "2012-10-16 00:00:00"
+    ],
+    "type": "datetime",
+    "nullable": true,
+    "null_percentage": 8.0,
+    "description": "Date of purchase order entered by the user; may be backdated, so creation date is primarily used.",
+    "note": "Datetime object - use for date queries (creation_date preferred)"
+  },
+  "creation_date_str": {
+    "sample_values": [
+      "03/19/2015",
+      "08/01/2012",
+      "10/16/2012",
+      "07/10/2013",
+      "05/28/2013"
+    ],
+    "type": "str",
+    "nullable": false,
+    "note": "Display only - use non-_str version for queries"
+  },
+  "purchase_date_str": {
+    "sample_values": [
+      "None",
+      "03/17/2015",
+      "10/16/2012",
+      "06/28/2013",
+      "05/28/2013"
+    ],
+    "type": "str",
+    "nullable": true,
+    "null_percentage": 8.0,
+    "note": "Display only - use non-_str version for queries"
+  },
+  "fiscal_year": {
+    "sample_values": [
+      "2014-2015",
+      "2012-2013",
+      "2013-2014"
+    ],
+    "type": "str",
+    "nullable": false,
+    "description": "Fiscal year derived from creation date (California fiscal year: July 1 - June 30)."
+  },
+  "lpa_number": {
+    "sample_values": [
+      "1-14-26-01D",
+      "None",
+      "1-13-89-126",
+      "5-13-89-15",
+      "1-11-70-04E"
+    ],
+    "type": "str",
+    "nullable": true,
+    "null_percentage": 68.0,
+    "description": "Leveraged Procurement Agreement (Contract Number). Indicates contract spend if present."
+  },
+  "purchase_order_number": {
+    "sample_values": [
+      "4500155834",
+      "PR458171",
+      "4600008964",
+      "P1300018",
+      "REQ0009041"
+    ],
+    "type": "str",
+    "nullable": false,
+    "description": "Purchase order identifier; not unique across departments."
+  },
+  "requisition_number": {
+    "sample_values": [
+      "None",
+      "REQ0013467",
+      "REQ0012335",
+      "REQ0008985",
+      "REQ0009041"
+    ],
+    "type": "str",
+    "nullable": true,
+    "null_percentage": 93.0,
+    "description": "Requisition identifier; not unique across departments."
+  },
+  "acquisition_type": {
+    "sample_values": [
+      "NON-IT Services",
+      "NON-IT Goods",
+      "IT Goods",
+      "IT Services"
+    ],
+    "type": "str",
+    "nullable": false,
+    "description": "Type of acquisition: Non-IT Goods, Non-IT Services, IT Goods, IT Services."
+  },
+  "sub_acquisition_type": {
+    "sample_values": [
+      "Agreements with other governmental entities and public universities",
+      "None",
+      "Services are specifically exempt by statute",
+      "Public Works",
+      "Hazardous Activities"
+    ],
+    "type": "str",
+    "nullable": true,
+    "null_percentage": 78.0,
+    "description": "Depends on the acquisition type used."
+  },
+  "acquisition_method": {
+    "sample_values": [
+      "Informal Competitive",
+      "Services are specifically exempt by statute",
+      "Master Purchase/Price Agreement",
+      "SB/DVBE Option",
+      "Statewide Contract"
+    ],
+    "type": "str",
+    "nullable": false,
+    "description": "Type of acquisition used to make purchase."
+  },
+  "sub_acquisition_method": {
+    "sample_values": [
+      "Only goods and services that meet needs of the State",
+      "None",
+      "Fleet",
+      "Prison Industry Authority (PIA)"
+    ],
+    "type": "str",
+    "nullable": true,
+    "null_percentage": 93.0,
+    "description": "Depends on the acquisition method used."
+  },
+  "department_name": {
+    "sample_values": [
+      "Developmental Services, Department of",
+      "Franchise Tax Board",
+      "Water Resources, Department of",
+      "Corrections and Rehabilitation, Department of",
+      "Consumer Affairs, Department of"
+    ],
+    "type": "str",
+    "nullable": false,
+    "description": "Name of purchasing department (normalized field)."
+  },
+  "supplier_code": {
+    "sample_values": [
+      "1758151",
+      "13274",
+      "1056600",
+      "29677",
+      "23836"
+    ],
+    "type": "str",
+    "nullable": false,
+    "description": "Supplier code (normalized field)."
+  },
+  "supplier_name": {
+    "sample_values": [
+      "U.S. Army Corp of Engineers (USACE)",
+      "Angus Hamer Networking",
+      "US Foodservice",
+      "California Veteran Supply Inc.",
+      "Western Blue Corporation"
+    ],
+    "type": "str",
+    "nullable": false,
+    "description": "Supplier name as entered during registration with the state."
+  },
+  "supplier_qualifications": {
+    "sample_values": [
+      "CA-MB CA-SB CA-SBE",
+      "None",
+      "CA-DVBE CA-SB CA-SBE CDVBE",
+      "CA-SB",
+      "CA-SB CA-SBE"
+    ],
+    "type": "str",
+    "nullable": true,
+    "null_percentage": 57.0,
+    "description": "Identifies supplier as SB, SBE, DVBE, NP, or MB; can be multiple categories."
+  },
+  "supplier_zip_code": {
+    "sample_values": [
+      "None",
+      "93612",
+      "95827",
+      "95814",
+      "95621"
+    ],
+    "type": "str",
+    "nullable": true,
+    "null_percentage": 19.0,
+    "description": "Supplier zip code."
+  },
+  "cal_card": {
+    "sample_values": [
+      "NO"
+    ],
+    "type": "str",
+    "nullable": false,
+    "description": "Indicates if a State credit card (CalCard) was used (Yes/No)."
+  },
+  "item_name": {
+    "sample_values": [
+      "National Environmental Policy Act",
+      "MISC FOOD ITEMS AND FRESH PRODUCE FOR THE WEEK OF 3/9/15-3/13/15",
+      "Samsung CLT-M609S, Magenta Toner Cartridge, 7,000 Pages Yield",
+      "Software maintenance",
+      "Towels, bath white 20x40"
+    ],
+    "type": "str",
+    "nullable": false,
+    "description": "Name of items being purchased."
+  },
+  "item_description": {
+    "sample_values": [
+      "The purpose of this agreement is to establish a mutual framework\ngoverning the respective responsibilities of the parties for the\nacceptance and expenditure of funds contributed by DWR to provide for\nthe Army Corps taking the lead under the National Envir",
+      "MISC FOOD ITEMS AND FRESH PRODUCE FOR THE WEEK OF 3/9/15-3/13/15",
+      "Samsung CLT-M609S, Magenta Toner Cartridge, 7,000 Pages Yield",
+      "Software maintenance",
+      "Towels, bath white 20x40"
+    ],
+    "type": "str",
+    "nullable": false,
+    "description": "Description of items being purchased."
+  },
+  "quantity": {
+    "sample_values": [
+      "4",
+      "275",
+      "1",
+      "2957.5",
+      "25"
+    ],
+    "type": "int",
+    "nullable": false,
+    "description": "Quantity of items purchased.",
+    "note": "Integer - use for counting and arithmetic"
+  },
+  "unit_price": {
+    "sample_values": [
+      "113.0",
+      "545180.0",
+      "31989.0",
+      "10.8",
+      "11341.21"
+    ],
+    "type": "float",
+    "nullable": false,
+    "description": "Unit price of items.",
+    "note": "Float - use for numeric operations ($gt, $sum, $avg)"
+  },
+  "total_price": {
+    "sample_values": [
+      "2970.0",
+      "452.0",
+      "545180.0",
+      "31989.0",
+      "11341.21"
+    ],
+    "type": "float",
+    "nullable": false,
+    "description": "Total price of items (excludes taxes and shipping).",
+    "note": "Float - use for numeric operations ($gt, $sum, $avg)"
+  },
+  "unit_price_str": {
+    "sample_values": [
+      "$10.80",
+      "$545180.00",
+      "$11341.21",
+      "$113.00",
+      "$31989.00"
+    ],
+    "type": "str",
+    "nullable": false,
+    "note": "Display only - use non-_str version for queries"
+  },
+  "total_price_str": {
+    "sample_values": [
+      "$452.00",
+      "$2970.00",
+      "$545180.00",
+      "$11341.21",
+      "$31989.00"
+    ],
+    "type": "str",
+    "nullable": false,
+    "note": "Display only - use non-_str version for queries"
+  },
+  "classification_codes": {
+    "sample_values": [
+      "81112205",
+      "44103103",
+      "52121701",
+      "10131701\n10131702",
+      "10151523\n12164504\n30151507\n50111514\n50111516\n50111522\n50112011\n50121537\n50131609\n50131701\n50131801\n50151513\n50171550\n50171831\n50171832\n50181909\n50182004\n50191507\n50192303\n50192901\n50193103\n50193201\n50201706\n50201714\n50202503\n50202601\n50202706\n50221201\n511"
+    ],
+    "type": "str",
+    "nullable": false,
+    "description": "UNSPSC v14 codes for purchased items; may include multiple codes per purchase order."
+  },
+  "normalized_unspsc": {
+    "sample_values": [
+      "10151523",
+      "81112205",
+      "44103103",
+      "52121701",
+      "10131701"
+    ],
+    "type": "str",
+    "nullable": false,
+    "description": "First 8 digits of the UNSPSC v14 code representing the purchase order."
+  },
+  "commodity_title": {
+    "sample_values": [
+      "Cauliflower seeds or seedlings",
+      "Database management system software maintenance",
+      "Bath towels",
+      "Printer or facsimile toner",
+      "Terrariums"
+    ],
+    "type": "str",
+    "nullable": true,
+    "null_percentage": 1.0,
+    "description": "Commodity title correlated with the 8-digit Normalized UNSPSC."
+  },
+  "class": {
+    "sample_values": [
+      "81112200",
+      "44103100",
+      "10131700",
+      "10151500",
+      "52121700"
+    ],
+    "type": "str",
+    "nullable": true,
+    "null_percentage": 1.0,
+    "description": "Class number correlated with the 8-digit Normalized UNSPSC."
+  },
+  "class_title": {
+    "sample_values": [
+      "Animal habitats",
+      "Printer and facsimile and photocopier supplies",
+      "Vegetable seeds and seedlings",
+      "Software maintenance and support",
+      "Towels"
+    ],
+    "type": "str",
+    "nullable": true,
+    "null_percentage": 1.0,
+    "description": "Class title correlated with the 8-digit Normalized UNSPSC."
+  },
+  "family": {
+    "sample_values": [
+      "81110000",
+      "10130000",
+      "44100000",
+      "10150000",
+      "52120000"
+    ],
+    "type": "str",
+    "nullable": true,
+    "null_percentage": 1.0,
+    "description": "Family number correlated with the 8-digit Normalized UNSPSC."
+  },
+  "family_title": {
+    "sample_values": [
+      "Seeds and bulbs and seedlings and cuttings",
+      "Computer services",
+      "Office machines and their supplies and accessories",
+      "Animal containment and habitats",
+      "Bedclothes and table and kitchen linen and towels"
+    ],
+    "type": "str",
+    "nullable": true,
+    "null_percentage": 1.0,
+    "description": "Family title correlated with the 8-digit Normalized UNSPSC."
+  },
+  "segment": {
+    "sample_values": [
+      "21000000",
+      "44000000",
+      "10000000",
+      "52000000",
+      "81000000"
+    ],
+    "type": "str",
+    "nullable": true,
+    "null_percentage": 1.0,
+    "description": "Segment number correlated with the 8-digit Normalized UNSPSC."
+  },
+  "segment_title": {
+    "sample_values": [
+      "Office Equipment and Accessories and Supplies",
+      "Engineering and Research and Technology Based Services",
+      "Farming and Fishing and Forestry and Wildlife Machinery and Accessories",
+      "Domestic Appliances and Supplies and Consumer Electronic Products",
+      "Live Plant and Animal Material and Accessories and Supplies"
+    ],
+    "type": "str",
+    "nullable": true,
+    "null_percentage": 1.0
+  },
+  "location": {
+    "sample_values": [
+      "None",
+      "95827\n(38.563097, -121.328511)",
+      "95814\n(38.580427, -121.494396)",
+      "95621\n(38.695315, -121.308889)",
+      "93612\n(36.815415, -119.711438)"
+    ],
+    "type": "str",
+    "nullable": true,
+    "null_percentage": 19.0
+  }
+}

@@ -7,6 +7,12 @@ from openai import OpenAI
 from ..mongodb_query import MongoDBQueryAgent
 from ..config import Config
 
+try:
+    import mlflow
+    MLFLOW_AVAILABLE = True
+except ImportError:
+    MLFLOW_AVAILABLE = False
+
 
 def generate_error_explanation(user_query: str, error_msg: str) -> str:
     """Generate a helpful error explanation using LLM"""

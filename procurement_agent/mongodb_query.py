@@ -11,6 +11,7 @@ from typing import Dict, Any, cast
 import os
 from pathlib import Path
 from .prompts.prompts import SYSTEM_PROMPT
+from .prompts.data_columns import DGS_PURCHASING_DATA_DICT
 
 
 class MongoDBQueryAgent:
@@ -28,6 +29,7 @@ class MongoDBQueryAgent:
         self.collection = self.db[collection_name]
         self.openai_client = OpenAI(api_key=openai_api_key or os.getenv("OPENAI_API_KEY"))
         self.schema = self._get_collection_schema()
+        self._save_schema_to_file()  # Save schema every time
         self.system_prompt_template = SYSTEM_PROMPT # self._load_system_prompt()
 
     # def _load_system_prompt(self) -> str:
@@ -37,7 +39,46 @@ class MongoDBQueryAgent:
     #         return f.read()
 
     def _get_collection_schema(self, sample_size: int = 100) -> Dict:
-        """Get collection schema by sampling documents"""
+        """
+        Get enriched collection schema with business context.
+
+        Returns field names, types, AND business descriptions from data_columns.py
+        """
+        # CSV to MongoDB field mapping
+        CSV_TO_MONGODB_FIELD_MAP = {
+            "Creation Date": "creation_date",
+            "Purchase Date": "purchase_date",
+            "Fiscal Year": "fiscal_year",
+            "LPA Number": "lpa_number",
+            "Purchase Order Number": "purchase_order_number",
+            "Requisition Number": "requisition_number",
+            "Acquisition Type": "acquisition_type",
+            "Sub-Acquisition Type": "sub_acquisition_type",
+            "Acquisition Method": "acquisition_method",
+            "Sub-Acquisition Method": "sub_acquisition_method",
+            "Department Name": "department_name",
+            "Supplier Code": "supplier_code",
+            "Supplier Name": "supplier_name",
+            "Supplier Qualifications": "supplier_qualifications",
+            "Supplier Zip Code": "supplier_zip_code",
+            "CalCard": "cal_card",
+            "Item Name": "item_name",
+            "Item Description": "item_description",
+            "Quantity": "quantity",
+            "Unit Price": "unit_price",
+            "Total Price": "total_price",
+            "Classification Codes": "classification_codes",
+            "Normalized UNSPSC": "normalized_unspsc",
+            "Commodity Title": "commodity_title",
+            "Class": "class",
+            "Class Title": "class_title",
+            "Family": "family",
+            "Family Title": "family_title",
+            "Segment": "segment",
+            "Segment Title": "segment_title",
+            "Location": "location"
+        }
+
         sample_docs = list(self.collection.aggregate([{"$sample": {"size": sample_size}}]))
 
         if not sample_docs:
@@ -49,15 +90,24 @@ class MongoDBQueryAgent:
                 if key == "_id":
                     continue
                 if key not in fields:
-                    fields[key] = {"types": {}}
+                    fields[key] = {"types": {}, "sample_values": set()}
                 value_type = type(value).__name__
                 if value_type not in fields[key]["types"]:
                     fields[key]["types"][value_type] = 0
                 fields[key]["types"][value_type] += 1
 
-        # Determine primary type
+                # Collect sample values (limit to 5)
+                if len(fields[key]["sample_values"]) < 5:
+                    fields[key]["sample_values"].add(str(value))
+
+        # Create reverse mapping
+        mongodb_to_csv = {v: k for k, v in CSV_TO_MONGODB_FIELD_MAP.items()}
+
+        # Determine primary type and enrich with business context
         for field_name, field_info in fields.items():
             types = field_info["types"]
+
+            # Determine primary type (prefer non-None types)
             if len(types) > 1 and "NoneType" in types:
                 types_without_none = {k: v for k, v in types.items() if k != "NoneType"}
                 if types_without_none:
@@ -69,7 +119,53 @@ class MongoDBQueryAgent:
 
             fields[field_name]["type"] = primary_type
 
+            # Calculate nullable status and percentage
+            has_none = "NoneType" in types
+            none_count = types.get("NoneType", 0)
+            total_count = sum(types.values())
+
+            fields[field_name]["nullable"] = has_none
+            if has_none:
+                fields[field_name]["null_percentage"] = round(none_count / total_count * 100, 1)
+
+            # Convert sample_values from set to list
+            fields[field_name]["sample_values"] = list(fields[field_name]["sample_values"])
+
+            # Remove internal types dict (not needed in final schema)
+            del fields[field_name]["types"]
+
+            # ENRICHMENT: Add business description from data_columns.py
+            if field_name in mongodb_to_csv:
+                csv_field = mongodb_to_csv[field_name]
+                if csv_field in DGS_PURCHASING_DATA_DICT:
+                    fields[field_name]["description"] = DGS_PURCHASING_DATA_DICT[csv_field]
+
+            # Add usage notes for converted fields
+            if field_name.endswith("_str"):
+                fields[field_name]["note"] = "Display only - use non-_str version for queries"
+            elif field_name == "creation_date":
+                fields[field_name]["note"] = "Datetime object - use for date queries with $gte, $lte"
+            elif field_name == "purchase_date":
+                fields[field_name]["note"] = "Datetime object - use for date queries (creation_date preferred)"
+            elif field_name in ["total_price", "unit_price"]:
+                fields[field_name]["note"] = "Float - use for numeric operations ($gt, $sum, $avg)"
+            elif field_name == "quantity":
+                fields[field_name]["note"] = "Integer - use for counting and arithmetic"
+
         return fields
+
+    def _save_schema_to_file(self):
+        """Save the generated schema to data/collection_schema.json"""
+        # Create data directory if it doesn't exist
+        data_dir = Path(__file__).parent.parent / "data"
+        data_dir.mkdir(exist_ok=True)
+
+        # Save schema to JSON file (overwrites if exists)
+        schema_file = data_dir / "collection_schema.json"
+        with open(schema_file, 'w', encoding='utf-8') as f:
+            json.dump(self.schema, f, indent=2, ensure_ascii=False)
+
+        print(f"✅ Schema saved to: {schema_file}")
 
     def _parse_datetime_placeholders(self, query):
         """Parse datetime placeholders to Python datetime objects"""

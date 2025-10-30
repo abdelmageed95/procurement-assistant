@@ -43,3 +43,7 @@ logs/
 # chromadb
 chroma_db/
 
+# MLflow
+mlruns/
+mlartifacts/
+

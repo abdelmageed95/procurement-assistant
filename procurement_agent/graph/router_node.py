@@ -5,6 +5,12 @@ from typing import Dict
 from openai import OpenAI
 from ..config import Config
 
+try:
+    import mlflow
+    MLFLOW_AVAILABLE = True
+except ImportError:
+    MLFLOW_AVAILABLE = False
+
 
 def router_node(state: Dict) -> Dict:
     """

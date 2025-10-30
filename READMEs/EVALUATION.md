@@ -1,0 +1,768 @@
+# Evaluation Framework
+
+## Overview
+
+The procurement assistant includes a comprehensive evaluation framework that combines MLflow GenAI standardized pipeline with detailed custom scoring across 7 criteria to systematically assess system performance.
+
+## Quick Start
+
+```bash
+# Run evaluation with sample queries
+python evaluate.py --sample 5
+
+# Full evaluation with all queries
+python evaluate.py
+
+# View results in MLflow UI
+mlflow ui --port 5000
+# Navigate to: http://localhost:5000
+```
+
+## Architecture
+
+### Unified Evaluation System
+
+The evaluation framework combines three key components:
+
+1. **MLflow GenAI Pipeline**: Standardized evaluation framework using `mlflow.genai.evaluate()`
+2. **Custom Judges**: Seven detailed judges using `mlflow.genai.make_judge()`
+3. **Comprehensive Tracking**: System prompts, schema, workflow steps, and metrics
+
+### Historical Context
+
+Previously, the system had two separate evaluation scripts:
+
+- **evaluate_system.py** (1,116 lines): Manual detailed evaluation
+- **evaluate_system_genai.py** (367 lines): Simple MLflow GenAI evaluation
+
+These have been unified into **evaluate.py** (600 lines) combining the best features of both.
+
+## Evaluation Criteria
+
+### Scoring System
+
+Total: 100 points across 7 criteria
+
+**Category 1: Query Generation Quality (45 points)**
+
+1. **Semantic Correctness** (25 points)
+   - Query matches user intent
+   - Correct field selection
+   - Appropriate aggregations and filters
+
+2. **Query Efficiency** (20 points)
+   - Early filter application
+   - Proper use of limits
+   - Index-friendly operations
+   - Optimal query structure
+
+**Category 2: Result Accuracy (35 points)**
+
+3. **Data Correctness** (25 points)
+   - Accurate results
+   - Reasonable numbers
+   - Data-driven responses
+   - No fabricated data
+
+4. **Completeness** (10 points)
+   - All requested data returned
+   - No unexpected truncation
+   - Comprehensive answers
+
+**Category 3: Response Quality (20 points)**
+
+5. **Natural Language** (10 points)
+   - Conversational quality
+   - Readability and flow
+   - Professional tone
+
+6. **Relevance** (5 points)
+   - Directly addresses query
+   - Focused response
+   - No unnecessary information
+
+7. **Formatting** (5 points)
+   - Well-structured
+   - Easy to scan
+   - Professional presentation
+
+## Implementation
+
+### Judge Creation
+
+Each criterion is implemented as an MLflow GenAI judge:
+
+```python
+semantic_judge = mlflow.genai.make_judge(
+    name="semantic_correctness",
+    instructions="""Evaluate if the query semantically matches the user's intent.
+
+User Question: {{ inputs }}
+AI Response: {{ outputs }}
+
+Does the response answer what the user actually asked?
+Are the correct fields, operations, and filters being used?
+
+Score from 0-25:
+- 25 = Perfect match, answers exactly what was asked
+- 19 = Mostly correct, minor semantic issues
+- 13 = Partially correct, some misunderstanding
+- 6 = Mostly wrong, major semantic issues
+- 0 = Completely wrong, doesn't answer the question
+
+Provide your score (0-25) and rationale.""",
+    model="openai:/gpt-4o-mini"
+)
+```
+
+### Template Variables
+
+MLflow GenAI judges support these template variables:
+
+- `{{ inputs }}`: User query
+- `{{ outputs }}`: AI response
+- `{{ trace }}`: Execution trace (for debugging)
+- `{{ expectations }}`: Expected results (optional)
+
+### Evaluation Execution
+
+```python
+# Load queries
+queries_df = load_queries("evaluate.txt")
+
+# Create judges
+judges = [
+    semantic_judge,
+    efficiency_judge,
+    data_correctness_judge,
+    completeness_judge,
+    natural_language_judge,
+    relevance_judge,
+    formatting_judge
+]
+
+# Run evaluation
+results = mlflow.genai.evaluate(
+    data=queries_df,
+    predict_fn=predict_fn,
+    scorers=judges
+)
+```
+
+### Prediction Function
+
+```python
+def predict_fn(query: str) -> str:
+    """
+    Process single query through workflow
+
+    Args:
+        query: User question
+
+    Returns:
+        AI response string
+    """
+    result = asyncio.run(workflow.process(
+        user_message=query,
+        session_id=f"eval_{int(time.time())}",
+        user_id="evaluator"
+    ))
+
+    return result['response']
+```
+
+## Query File Format
+
+### Structure
+
+Evaluation queries are stored in a text file:
+
+```
+1. What is the total spending across all departments in 2014?
+2. Which department spent the most overall?
+3. Show me the top 5 suppliers by total contract value
+4. What was the average order value in 2013?
+5. How many purchases were made in Q1 2014?
+```
+
+### Categories
+
+Queries are categorized by type:
+
+- **Aggregation (Sum)**: Total spending, cumulative values
+- **Aggregation (Count)**: Number of purchases, order counts
+- **Aggregation (Average)**: Average order value, mean statistics
+- **Ranking**: Top N queries, largest/smallest
+- **Time-based**: Year, quarter, month filtering
+- **Filtering**: Department, supplier, price range filters
+- **Complex**: Multi-stage aggregations, nested grouping
+
+## MLflow Integration
+
+### Experiment Structure
+
+```
+Experiment: procurement-assistant-evaluation
+    |
+    +-- Run: eval_20251030_214449
+        |
+        +-- Parameters
+        |   - total_queries: 53
+        |   - evaluation_date: 2025-10-30
+        |   - model: gpt-4o-mini
+        |   - evaluation_type: unified
+        |
+        +-- Metrics
+        |   - semantic_correctness/score: 23.5
+        |   - query_efficiency/score: 18.2
+        |   - data_correctness/score: 22.8
+        |   - (... 4 more criteria)
+        |
+        +-- Artifacts
+        |   - system_prompts/
+        |   |   - mongodb_query_agent.txt
+        |   |   - router_agent.txt
+        |   |   - chat_agent.txt
+        |   |
+        |   - mongodb_schema.json
+        |
+        +-- Traces
+            - Query 1 trace
+            - Query 2 trace
+            - (... all query traces)
+```
+
+### Prompt Registry
+
+System prompts are registered for version control:
+
+```python
+mlflow.genai.register_prompt(
+    name="mongodb_query_agent_unified",
+    template=SYSTEM_PROMPT,
+    commit_message="MongoDB query generation prompt with schema",
+    tags={
+        "agent": "data_agent",
+        "version": "v2.0",
+        "evaluation": "unified",
+        "has_schema": "true"
+    }
+)
+```
+
+Benefits:
+- Version tracking
+- Easy comparison between versions
+- Rollback capability
+- A/B testing support
+
+### Artifact Logging
+
+Comprehensive artifacts logged for each run:
+
+**System Prompts**:
+```
+system_prompts/
+    mongodb_query_agent.txt (276 lines with schema)
+    router_agent.txt
+    chat_agent.txt
+    all_prompts.json (combined)
+```
+
+**Schema Information**:
+```
+mongodb_schema.json (35 fields with metadata)
+```
+
+**Execution Traces**:
+- Captured automatically via `@mlflow.trace` decorators
+- Node-by-node execution details
+- Timing information
+- Error tracking
+
+## Viewing Results
+
+### MLflow UI Navigation
+
+**1. Start UI**:
+```bash
+mlflow ui --port 5000
+```
+
+**2. Open Browser**:
+Navigate to http://localhost:5000
+
+**3. Select Experiment**:
+Click on "procurement-assistant-evaluation"
+
+**4. Select Run**:
+Click on your run name (e.g., "eval_20251030_214449")
+
+**5. View Results**:
+
+**Traces Tab**:
+- Individual query traces
+- Score per criterion per query
+- Judge rationales
+- Execution timing
+
+**Metrics Tab**:
+- Aggregated scores across all queries
+- Average per criterion
+- Overall statistics
+
+**Artifacts Tab**:
+- System prompts
+- MongoDB schema
+- Detailed results JSON
+
+### Analyzing Scores
+
+**Per-Query Analysis**:
+```
+Traces Tab -> Select Query -> View Scores
+
+Query: "What is total spending in 2014?"
+- Semantic Correctness: 25/25
+- Query Efficiency: 18/20
+- Data Correctness: 24/25
+- Completeness: 10/10
+- Natural Language: 9/10
+- Relevance: 5/5
+- Formatting: 5/5
+
+Total: 96/100
+```
+
+**Aggregate Analysis**:
+```
+Metrics Tab
+
+Average Scores:
+- semantic_correctness/score: 23.5/25.0
+- query_efficiency/score: 18.2/20.0
+- data_correctness/score: 22.8/25.0
+- completeness/score: 9.5/10.0
+- natural_language/score: 8.9/10.0
+- relevance/score: 4.8/5.0
+- formatting/score: 4.7/5.0
+
+Overall Average: 92.4/100
+```
+
+### Comparing Runs
+
+**1. Select Multiple Runs**:
+Check boxes next to runs you want to compare
+
+**2. Click Compare**:
+View side-by-side comparison
+
+**3. Analyze Differences**:
+- Metric improvements/regressions
+- Parameter changes
+- Execution time differences
+
+**Use Cases**:
+- Before/after optimization
+- Prompt iteration comparison
+- Model version testing
+- Feature impact analysis
+
+## Command-Line Options
+
+### Basic Usage
+
+```bash
+python evaluate.py [OPTIONS]
+```
+
+### Available Options
+
+**--queries**: Path to queries file
+```bash
+python evaluate.py --queries custom_queries.txt
+```
+Default: evaluate.txt
+
+**--sample**: Evaluate only first N queries
+```bash
+python evaluate.py --sample 10
+```
+Useful for quick testing
+
+**--run-name**: Custom MLflow run name
+```bash
+python evaluate.py --run-name baseline_v1
+```
+Default: eval_YYYYMMDD_HHMMSS
+
+**--experiment**: MLflow experiment name
+```bash
+python evaluate.py --experiment testing
+```
+Default: procurement-assistant-evaluation
+
+### Example Commands
+
+```bash
+# Quick test with 2 queries
+python evaluate.py --sample 2
+
+# Full evaluation with custom name
+python evaluate.py --run-name production_test
+
+# Different queries file
+python evaluate.py --queries test_queries.txt --sample 5
+
+# Custom experiment for testing
+python evaluate.py --experiment dev-testing --run-name iteration_3
+```
+
+## Performance Metrics
+
+### Execution Time
+
+Typical evaluation times:
+
+| Queries | Time (approx) | Notes |
+|---------|---------------|-------|
+| 1 query | 15-20 seconds | Includes judge execution |
+| 5 queries | 1-2 minutes | Parallel judge execution |
+| 10 queries | 2-4 minutes | Full criteria evaluation |
+| 53 queries | 10-15 minutes | Complete test suite |
+
+### Cost Estimation
+
+OpenAI API costs (gpt-4o-mini):
+
+**Per Query**:
+- Query generation: ~$0.0001
+- 8 judge evaluations: ~$0.0008
+- Total per query: ~$0.001
+
+**Full Evaluation (53 queries)**:
+- Total cost: ~$0.05
+
+### Resource Usage
+
+- CPU: Moderate (LLM API calls)
+- Memory: Low (~200MB)
+- Network: API calls to OpenAI
+- Storage: ~10MB per evaluation run
+
+## Advanced Features
+
+### Custom Judges
+
+Add domain-specific judges:
+
+```python
+def create_custom_judge():
+    custom_judge = mlflow.genai.make_judge(
+        name="domain_specific_check",
+        instructions="""Check for domain-specific requirement.
+
+        User Query: {{ inputs }}
+        AI Response: {{ outputs }}
+
+        Verify that the response includes required information...
+
+        Score from 0-10...""",
+        model="openai:/gpt-4o-mini"
+    )
+    return custom_judge
+
+# Add to judges list
+judges.append(create_custom_judge())
+```
+
+### Ground Truth Validation
+
+Compare against known correct answers:
+
+```python
+def load_ground_truth():
+    return {
+        "What is total spending in 2014?": {
+            "expected_value": 156700000,
+            "expected_query_type": "aggregate"
+        }
+    }
+
+# Use in custom judge
+ground_truth = load_ground_truth()
+```
+
+### Batch Evaluation
+
+Run multiple evaluation configurations:
+
+```python
+configs = [
+    {"model": "gpt-4o-mini", "temperature": 0},
+    {"model": "gpt-4o-mini", "temperature": 0.7},
+    {"model": "gpt-4o", "temperature": 0}
+]
+
+for config in configs:
+    run_evaluation(
+        run_name=f"eval_{config['model']}_{config['temperature']}",
+        config=config
+    )
+```
+
+### Continuous Evaluation
+
+Set up automated evaluation:
+
+```bash
+#!/bin/bash
+# evaluate_nightly.sh
+
+# Run evaluation
+python evaluate.py --run-name nightly_$(date +%Y%m%d)
+
+# Check if scores meet threshold
+python check_scores.py --threshold 90
+
+# Alert if below threshold
+if [ $? -ne 0 ]; then
+    send_alert "Evaluation scores below threshold"
+fi
+```
+
+## Best Practices
+
+### Query Selection
+
+1. **Diverse Coverage**: Include all query types
+2. **Edge Cases**: Test boundary conditions
+3. **Real Examples**: Use actual user queries
+4. **Balanced Distribution**: Cover all categories equally
+
+### Judge Design
+
+1. **Clear Instructions**: Unambiguous scoring criteria
+2. **Consistent Scale**: Use same scale across judges
+3. **Objective Criteria**: Minimize subjective interpretation
+4. **Example-Based**: Provide scoring examples
+
+### Result Analysis
+
+1. **Identify Patterns**: Look for systematic failures
+2. **Prioritize Issues**: Focus on high-impact problems
+3. **Track Progress**: Compare runs over time
+4. **Document Findings**: Record insights and actions
+
+### Iteration Process
+
+1. **Baseline**: Establish initial scores
+2. **Improve**: Make system changes
+3. **Evaluate**: Run evaluation again
+4. **Compare**: Check for improvements
+5. **Repeat**: Continue iterating
+
+## Troubleshooting
+
+### Issue: Low Scores
+
+**Symptoms**: Scores significantly below expectations
+
+**Diagnosis**:
+- Check Traces tab for individual failures
+- Review judge rationales
+- Examine failed queries
+
+**Solutions**:
+- Improve system prompts
+- Enhance query generation logic
+- Add error handling
+- Refine response generation
+
+### Issue: Inconsistent Scores
+
+**Symptoms**: High variance between runs
+
+**Diagnosis**:
+- Check LLM temperature settings
+- Review query randomness
+- Verify judge consistency
+
+**Solutions**:
+- Use temperature=0 for deterministic results
+- Fix random seeds
+- Add more specific judge instructions
+
+### Issue: Evaluation Takes Too Long
+
+**Symptoms**: Evaluation exceeds time budget
+
+**Solutions**:
+- Use --sample flag for quick tests
+- Run parallel evaluations
+- Optimize judge prompts (shorter)
+- Use faster model (gpt-4o-mini vs gpt-4o)
+
+### Issue: MLflow UI Not Showing Results
+
+**Symptoms**: Run appears but no metrics
+
+**Diagnosis**:
+- Check for errors in evaluation log
+- Verify MLflow version compatibility
+- Check experiment name
+
+**Solutions**:
+- Review console output for errors
+- Upgrade MLflow: `pip install --upgrade mlflow`
+- Ensure experiment exists
+
+## Testing
+
+### Unit Tests
+
+Test evaluation components:
+
+```bash
+# Test judge creation
+pytest tests/test_judges.py
+
+# Test prediction function
+pytest tests/test_predict_fn.py
+
+# Test query loading
+pytest tests/test_query_loader.py
+```
+
+### Integration Tests
+
+Test full evaluation flow:
+
+```python
+def test_full_evaluation():
+    """Test complete evaluation with small dataset"""
+    framework = UnifiedEvaluationFramework()
+
+    results = framework.run_evaluation(
+        queries_file="test_queries.txt",
+        sample_size=2
+    )
+
+    # Verify results logged
+    assert results is not None
+
+    # Verify judges executed
+    run_id = mlflow.active_run().info.run_id
+    metrics = mlflow.get_run(run_id).data.metrics
+
+    assert len(metrics) > 0
+```
+
+### Manual Testing
+
+```bash
+# Quick smoke test
+python evaluate.py --sample 1
+
+# Verify MLflow logging
+mlflow ui
+# Check that run appears with all artifacts
+```
+
+## Comparison with Legacy Systems
+
+### Feature Matrix
+
+| Feature | evaluate.py | evaluate_system.py | evaluate_system_genai.py |
+|---------|-------------|--------------------|-----------------------------|
+| MLflow GenAI | Yes | No | Yes |
+| Criteria Count | 7 | 8 | 3 |
+| Judge Type | make_judge() | Manual LLM | make_judge() |
+| Prompt Registry | Yes | No | Yes |
+| System Prompts | Yes | Yes | No |
+| Schema Tracking | Yes | Yes | Partial |
+| Lines of Code | 600 | 1,116 | 367 |
+| Maintenance | Easy | Complex | Easy |
+| **Recommended** | **YES** | Legacy | Legacy |
+
+### Migration Guide
+
+**From evaluate_system.py**:
+```bash
+# Old
+python evaluate_system.py --sample 5
+
+# New (identical functionality, better UX)
+python evaluate.py --sample 5
+```
+
+**From evaluate_system_genai.py**:
+```bash
+# Old (3 simple judges)
+python evaluate_system_genai.py --sample 5
+
+# New (7 detailed judges)
+python evaluate.py --sample 5
+```
+
+## Future Enhancements
+
+### Planned Features
+
+1. **Automated Regression Testing**: Detect performance regressions automatically
+2. **A/B Testing Support**: Compare multiple configurations side-by-side
+3. **Custom Metric Dashboard**: Visualizations beyond MLflow UI
+4. **Integration with CI/CD**: Run evaluations on every commit
+5. **Historical Trend Analysis**: Track metrics over time
+
+### Extensibility
+
+The framework is designed for easy extension:
+
+**Add New Judge**:
+```python
+def add_safety_judge():
+    safety_judge = mlflow.genai.make_judge(
+        name="safety",
+        instructions="Check for safety issues...",
+        model="openai:/gpt-4o-mini"
+    )
+    return safety_judge
+```
+
+**Add New Metric**:
+```python
+def log_custom_metric(result):
+    mlflow.log_metric("custom_metric", calculate_custom(result))
+```
+
+**Add New Artifact**:
+```python
+def log_analysis():
+    analysis = generate_analysis()
+    mlflow.log_dict(analysis, "custom_analysis.json")
+```
+
+## References
+
+### Documentation
+
+- MLflow GenAI: https://mlflow.org/docs/latest/genai/
+- MLflow Evaluate: https://mlflow.org/docs/latest/python_api/mlflow.html#mlflow.evaluate
+- Judge Patterns: https://mlflow.org/docs/latest/genai/judges/
+- Prompt Engineering: https://platform.openai.com/docs/guides/prompt-engineering
+
+### Related Files
+
+- UNIFIED_EVALUATION.md: Complete unified evaluation guide
+- MLFLOW_NAVIGATION_GUIDE.md: UI navigation instructions
+- IMPLEMENTATION_COMPLETE.md: MLflow GenAI features overview
+- evaluate.py: Main evaluation script
+- evaluate.txt: Default query file
+
+### Academic References
+
+- Evaluating LLMs: https://arxiv.org/abs/2307.03109
+- LLM-as-Judge: https://arxiv.org/abs/2306.05685
+- Prompt Optimization: https://arxiv.org/abs/2211.01910

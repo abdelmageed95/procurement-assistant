@@ -21,3 +21,9 @@ pydantic==2.12.3
 
 # Utilities
 python-multipart==0.0.20
+
+# Evaluation and Tracking
+mlflow==3.5.1
+litellm==1.79.0
+
+

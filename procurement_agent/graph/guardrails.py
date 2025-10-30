@@ -7,6 +7,12 @@ from openai import OpenAI
 import os
 import re
 
+try:
+    import mlflow
+    MLFLOW_AVAILABLE = True
+except ImportError:
+    MLFLOW_AVAILABLE = False
+
 
 class SafetyGuardrails:
     """Input/output validation focused on safety, not topic restriction"""
