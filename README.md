@@ -13,7 +13,6 @@ A production-ready, intelligent conversational AI system that analyzes  purchase
 
 - [Overview](#overview)
 - [Key Features](#key-features)
-- [What's New](#whats-new)
 - [System Architecture](#system-architecture)
 - [Project Structure](#project-structure)
 - [Installation](#installation)
@@ -187,154 +186,7 @@ Technical Details below to see everything and download the data."
 
 ---
 
-## 🆕 What's New
-
-### Recent Updates
-
-#### **v2.4.0 - Enhanced MLflow Evaluation & GenAI Features (Latest)**
-
-✨ **User-Requested Improvements:**
-- **Fractional Metric Display**: All scores now show as "14.0/15.0" instead of "14.0" for better clarity
-- **System Prompts Visibility**: All agent prompts (MongoDB, Router, Chat) now visible in MLflow UI artifacts
-- **Detailed Workflow Tracing**: Complete input/output tracking for each LangGraph node execution
-  - Router decisions with reasoning
-  - Query generation with validation results
-  - Per-node execution timing and data flow
-  - 6+ workflow steps fully traced
-
-🎯 **MLflow GenAI Integration:**
-- **Prompt Registry Support**: Ready for `mlflow.genai.register_prompt()` with version control
-- **Tracing Architecture**: Documented path to `@mlflow.trace` decorators for automatic spans
-- **GenAI Scorers**: Guide for Safety, Faithfulness, Relevance built-in metrics
-- **Evaluate API**: Documentation for `mlflow.genai.evaluate()` standardized pipeline
-
-📁 **Enhanced Artifacts** (per query):
-- `workflow_steps_detailed.json` - Complete node-by-node execution trace
-- `workflow_steps_complete.json` - Summary with evaluation scores
-- `system_prompts/` - All 3 agent prompts (mongodb, router, chat)
-- `prompts/` - LLM judge prompts with variables and outputs
-- `generated_query.json` - MongoDB query with metadata
-- `response.txt` - Final response text
-
-📊 **Improved Summary Display:**
-```
-🎯 Scores by Criterion:
-  - Syntax Correctness: 15.00/15.0
-  - Semantic Correctness: 20.00/20.0
-  - Query Efficiency: 13.50/15.0
-  - Data Correctness: 20.00/20.0
-  - Completeness: 10.00/10.0
-  - Natural Language: 10.00/10.0
-  - Relevance: 5.00/5.0
-  - Formatting: 5.00/5.0
-```
-
-📚 **New Documentation:**
-- `MLFLOW_GENAI_ENHANCEMENTS.md` - Complete MLflow GenAI features guide
-- `EVALUATION_IMPROVEMENTS_SUMMARY.md` - Detailed change summary
-- Updated navigation guides for finding artifacts in UI
-
-🛠️ **Usage:**
-```bash
-python evaluate_system.py --sample 2  # Test with 2 queries
-mlflow ui --port 5000                 # View results with enhanced artifacts
-```
-
-#### **v2.3.0 - Advanced Evaluation Framework**
-
-✨ **Major Features:**
-- **Comprehensive Evaluation Framework**: Production-ready assessment with advanced MLflow GenAI features
-  - **Multi-Dimensional Scoring**: 3-tier evaluation (Query Generation 50%, Result Accuracy 30%, Response Quality 20%)
-  - **LLM-as-Judge**: Uses GPT-4o-mini for semantic correctness and quality assessment
-  - **System Prompt Logging**: All agent prompts (MongoDB, Router, Chat) automatically logged
-  - **Token & Cost Tracking**: Complete OpenAI API usage and cost monitoring
-  - **Nested Runs**: Query-level debugging with step-by-step execution traces
-  - **Dataset Management**: Versioned MLflow datasets with lineage tracking
-  - **Schema Logging**: Complete MongoDB schema with business descriptions
-  - **LangGraph Tracing**: Automatic multi-step agent workflow capture
-
-🧪 **Evaluation Criteria:**
-- Query Generation: Syntax (15%), Semantics (20%), Efficiency (15%)
-- Result Accuracy: Data Correctness (20%), Completeness (10%)
-- Response Quality: Natural Language (10%), Relevance (5%), Formatting (5%)
-
-📊 **Sample Results:**
-- Success Rate: 100% on test set
-- Average Score: 99.25/100 across all criteria
-- Average Execution Time: ~10s per query
-- Token Cost: ~$0.0001 per query
-- Perfect scores on aggregation and ranking queries
-
-🛠️ **Usage:**
-```bash
-python evaluate_system.py --sample 5  # Test with first 5 queries
-python evaluate_system.py             # Full evaluation (53 queries)
-mlflow ui                             # View detailed results
-```
-
-#### **v2.2.0 - Enriched Schema & Data Tools**
-
-✨ **Major Features:**
-- **Enriched Schema Generation**: Schema now includes business context from `data_columns.py`
-  - Business descriptions for each field (e.g., "LPA Number indicates contract spend")
-  - Sample values (up to 5 per field) showing actual data format
-  - Nullable status and null percentage for data quality awareness
-  - Usage notes for converted fields (datetime, float, int)
-  - Better LLM understanding of field semantics and relationships
-
-- **Auto-Save Schema**: Automatically saves schema to `data/collection_schema.json`
-  - Generated once on server startup (not per query)
-  - Overwrites existing file with fresh data
-  - Easy inspection, debugging, and documentation
-  - Git-ignored (local development file)
-
-- **CSV to MongoDB Importer**: Standalone command-line tool (`import_csv_to_mongodb.py`)
-  - Flexible command-line arguments for all configuration
-  - Proper data type conversion (dates → datetime, currency → float, numbers → int)
-  - Batch processing with progress tracking (default: 1000 rows/batch)
-  - Statistics reporting (total processed, dates converted, errors)
-  - Usage: `python import_csv_to_mongodb.py data.csv --database my_db --collection orders`
-
-🔧 **Technical Improvements:**
-- Schema includes 6 metadata fields: type, nullable, null_percentage, sample_values, description, note
-- LLM receives richer context improving query accuracy by ~15-20%
-- Better field selection based on business semantics
-- Improved handling of null values and data quality issues
-- Field mapping between CSV names and MongoDB names
-
-📊 **Schema Example:**
-```json
-{
-  "lpa_number": {
-    "type": "str",
-    "nullable": true,
-    "null_percentage": 77.0,
-    "sample_values": ["1-15-87-17A", "7-11-51-02", "None"],
-    "description": "Leveraged Procurement Agreement (Contract Number). Indicates contract spend if present.",
-    "note": "Null when not a contract purchase"
-  }
-}
-```
-
-#### **v2.1.0 - Two-Tier Query System**
-
-✨ **Major Feature:**
-- **Two-Tier Query Execution**: Solves the "download only 100 rows" problem
-  - **Tier 1**: Limited query (100 results) for fast chat responses
-  - **Tier 2**: Complete query (10,000 results) for downloads and analysis
-  - **Total Count**: Tracks actual database totals vs available data
-- **Enhanced Technical Details**: Shows total vs available vs summary counts
-- **True Complete Data Access**: Downloads now include ALL results (up to 10K), not just 100
-
-🔧 **Technical Improvements:**
-- MongoDB executes 2-3 queries per request (limited, complete, count)
-- Frontend clearly displays data availability with informative messages
-- Safety limit of 10,000 prevents memory issues while providing comprehensive data
-- Backend properly passes `complete_results` through entire workflow
-
----
-
-##  System Architecture
+## System Architecture
 
 ### High-Level Architecture
 
@@ -565,7 +417,7 @@ of all procurement spending!
 What really stands out is how concentrated the spending is - just
 these top 5 departments account for over 80% of the total budget.
 
-💡 Want the complete breakdown of all 83 departments? Click Technical
+Want the complete breakdown of all 83 departments? Click Technical
 Details below to see everything and download the data."
 
 [Technical Details Button]
@@ -625,13 +477,13 @@ python import_csv_to_mongodb.py data.csv --no-clear
 
 #### **Features:**
 
-✅ **Data Type Conversion:**
+**Data Type Conversion:**
 - Dates: `"01/15/2013"` → `datetime(2013, 1, 15)`
 - Currency: `"$1,234.56"` → `1234.56` (float)
 - Numbers: `"123"` → `123` (int)
 - Empty strings → `None` (null)
 
-✅ **Command-Line Arguments:**
+**Command-Line Arguments:**
 | Argument | Type | Default | Description |
 |----------|------|---------|-------------|
 | `csv_file` | **Required** | - | Path to CSV file |
@@ -641,25 +493,25 @@ python import_csv_to_mongodb.py data.csv --no-clear
 | `--batch-size` | Optional | `1000` | Batch insert size |
 | `--no-clear` | Flag | False | Append mode (don't clear) |
 
-✅ **Progress Tracking:**
+**Progress Tracking:**
 ```
-🏛️  CALIFORNIA PROCUREMENT DATA IMPORTER
-✅ Connected to MongoDB: procurement_db.purchase_orders
-🗑️  Cleared 0 existing documents
-📄 Processing CSV: data.csv
+CALIFORNIA PROCUREMENT DATA IMPORTER
+Connected to MongoDB: procurement_db.purchase_orders
+Cleared 0 existing documents
+Processing CSV: data.csv
    Batch size: 1000
 
    Inserted 1000 rows...
    Inserted 2000 rows...
    Inserted 3000 rows...
 
-📊 IMPORT SUMMARY
+IMPORT SUMMARY
 Total rows processed:    3,437
 Dates converted:         3,437
 Prices converted:        3,437
 Errors:                  0
 
-✅ Collection 'purchase_orders' now has 3,437 documents
+Collection 'purchase_orders' now has 3,437 documents
 ```
 
 #### **Help:**
@@ -670,7 +522,7 @@ python import_csv_to_mongodb.py --help
 
 ---
 
-## 🧪 Evaluation Framework
+## Evaluation Framework
 
 The project includes a **unified evaluation framework** that combines MLflow GenAI standardized pipeline with detailed custom scoring across 7 criteria.
 
@@ -689,17 +541,17 @@ python evaluate_system_genai.py --sample 5    # MLflow GenAI only
 ### **Why Unified?**
 
 The new `evaluate.py` combines:
-- ✅ **MLflow GenAI Pipeline**: Standardized `mlflow.genai.evaluate()` framework
-- ✅ **7 Custom Judges**: All detailed criteria using `make_judge()`
-- ✅ **Prompt Registry**: Automatic prompt versioning with `register_prompt()`
-- ✅ **Complete Tracking**: System prompts, schema, workflow steps
-- ✅ **UI Integration**: Results in MLflow Evaluations and Traces tabs
+- **MLflow GenAI Pipeline**: Standardized `mlflow.genai.evaluate()` framework
+- **7 Custom Judges**: All detailed criteria using `make_judge()`
+- **Prompt Registry**: Automatic prompt versioning with `register_prompt()`
+- **Complete Tracking**: System prompts, schema, workflow steps
+- **UI Integration**: Results in MLflow Evaluations and Traces tabs
 
-### **🚀 Advanced Features:**
+### **Advanced Features:**
 
 The evaluation framework includes comprehensive MLflow GenAI capabilities:
 
-✨ **Advanced Tracking:**
+**Advanced Tracking:**
 - **System Prompts**: All agent system prompts (MongoDB, Router, Chat) logged
 - **Prompt Versioning**: All LLM-as-judge prompts logged as artifacts with outputs
 - **Token & Cost Tracking**: Monitor OpenAI API usage and estimated costs
@@ -709,20 +561,20 @@ The evaluation framework includes comprehensive MLflow GenAI capabilities:
 - **LangGraph Tracing**: Automatic multi-step agent workflow capture
 - **Schema Logging**: Complete MongoDB schema with business descriptions
 
-📊 **Additional Metrics:**
+**Additional Metrics:**
 ```
-💰 Token Usage & Cost:
+Token Usage & Cost:
   - total_tokens: 125,420
   - total_prompt_tokens: 98,230
   - total_completion_tokens: 27,190
   - total_cost_usd: $0.0312
 
-🔍 Query-Level Analysis:
+Query-Level Analysis:
   - Individual query runs with detailed metrics
   - Per-query artifacts (generated queries, responses)
   - Easy failure debugging
 
-📦 Enhanced Artifacts:
+Enhanced Artifacts:
   - system_prompts/ (MongoDB, Router, Chat agent prompts)
   - prompts/ (all LLM judge prompts + variables + outputs)
   - workflow_steps_complete.json (step-by-step execution)
@@ -733,7 +585,7 @@ The evaluation framework includes comprehensive MLflow GenAI capabilities:
   - prompt_templates_used.json
 ```
 
-📖 **Learn More:**
+**Learn More:**
 - See [UNIFIED_EVALUATION.md](UNIFIED_EVALUATION.md) for complete unified evaluation guide
 - See [MLFLOW_NAVIGATION_GUIDE.md](MLFLOW_NAVIGATION_GUIDE.md) for step-by-step UI navigation
 - See [MLFLOW_UI_GUIDE.md](MLFLOW_UI_GUIDE.md) for complete artifact reference
@@ -767,33 +619,33 @@ The framework uses a weighted scoring system (0-100 points) across three main di
 
 ### **Features:**
 
-✅ **LLM-as-Judge Evaluation:**
+**LLM-as-Judge Evaluation:**
 - Uses GPT-4o-mini to evaluate semantic correctness and response quality
 - Provides objective, consistent scoring across runs
 
-✅ **MLflow Integration:**
+**MLflow Integration:**
 - Tracks all metrics, parameters, and artifacts
 - Supports comparison across multiple evaluation runs
 - Stores detailed results JSON for analysis
 
-✅ **Query Categorization:**
+**Query Categorization:**
 - Automatically categorizes queries by type (aggregation, time-based, ranking, etc.)
 - Provides category-level performance insights
 
-✅ **Comprehensive Reporting:**
+**Comprehensive Reporting:**
 ```
-📊 EVALUATION SUMMARY
+EVALUATION SUMMARY
 ======================================================================
-✅ Success Rate: 100.0%
-❌ Failure Rate: 0.0%
-📈 Average Score: 99.25/100
-⏱️  Average Execution Time: 12.55s
+Success Rate: 100.0%
+Failure Rate: 0.0%
+Average Score: 99.25/100
+Average Execution Time: 12.55s
 
-📋 Scores by Category:
+Scores by Category:
   - aggregation_ranking: 100.00/100
   - aggregation_sum: 98.50/100
 
-🎯 Scores by Criterion:
+Scores by Criterion:
   - Completeness: 10.00
   - Data Correctness: 20.00
   - Formatting: 5.00
@@ -801,7 +653,6 @@ The framework uses a weighted scoring system (0-100 points) across three main di
   - Query Efficiency: 14.25
   - Relevance: 5.00
   - Semantic Correctness: 20.00
-  - Syntax Correctness: 15.00
 ```
 
 ### **Query File Format:**
@@ -972,7 +823,7 @@ Services absolutely dominates with $484M...
 
 [Shows top 15 results with insights]
 
-💡 Click Technical Details to see all 83 departments and download data.
+Click Technical Details to see all 83 departments and download data.
 ```
 
 **Technical Details Modal:**
@@ -1181,7 +1032,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 📊 Project Stats
+## Project Stats
 
 - **Lines of Code**: ~5,100 (Python + JavaScript)
 - **Agents**: 3 (Router, Data Query, Chat)
