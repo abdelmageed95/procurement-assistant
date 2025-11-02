@@ -332,7 +332,7 @@ procurement_experiments/
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/abdelmageed95/procurement-agent.git
+git clone https://github.com/abdelmageed95/procurement-assistant.git
 cd procurement-agent
 ```
 
