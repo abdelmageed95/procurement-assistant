@@ -617,37 +617,30 @@ Artifacts/
 │   ├── router_agent.txt
 │   ├── chat_agent.txt
 │   └── all_prompts.json
-└── judge_prompts/                   # All judge evaluation prompts
-    ├── syntax_correctness.txt       # With schema for validation
-    ├── semantic_correctness.txt
-    ├── query_efficiency.txt
-    ├── data_correctness.txt
-    ├── completeness.txt
-    ├── natural_language.txt
-    ├── relevance.txt
-    ├── formatting.txt
+└── judge_prompts/                   # All judge evaluation prompts (5 judges)
+    ├── syntax_correctness.txt       # With schema and date format rules
+    ├── semantic_correctness.txt     # Query intent matching
+    ├── query_efficiency.txt         # Pipeline optimization
+    ├── natural_language.txt         # Response quality
+    ├── relevance.txt                # Response relevance
     └── all_judges.json
 ```
 
-**Clean Metrics (12 total):**
+**Clean Metrics (8 total):**
 ```
-Individual Criteria (8):
-  - syntax_correctness_out_of_15: 13.2
-  - semantic_correctness_out_of_20: 18.5
-  - query_efficiency_out_of_15: 14.1
-  - data_correctness_out_of_20: 19.2
-  - completeness_out_of_10: 9.5
-  - natural_language_out_of_10: 9.1
-  - relevance_out_of_5: 4.8
-  - formatting_out_of_5: 4.6
+Individual Criteria (5):
+  - syntax_correctness_out_of_35: 31.25
+  - semantic_correctness_out_of_30: 27.50
+  - query_efficiency_out_of_15: 13.80
+  - natural_language_out_of_15: 13.60
+  - relevance_out_of_5: 4.75
 
-Category Totals (3):
-  - query_generation_out_of_50: 45.8
-  - result_accuracy_out_of_30: 28.7
-  - response_quality_out_of_20: 18.5
+Category Totals (2):
+  - query_generation_out_of_80: 72.55
+  - response_quality_out_of_20: 18.35
 
 Overall Score (1):
-  - overall_score_out_of_100: 93.0
+  - overall_score_out_of_100: 90.90
 ```
 
 **Learn More:**
@@ -759,19 +752,16 @@ The UI will be available at: **http://localhost:5000**
 
 Click on any run name to see:
 
-1. **Metrics Tab**: All 8 evaluation criteria scores
+1. **Metrics Tab**: All 5 evaluation criteria scores
    - `avg_score` - Overall score (0-100)
    - `success_rate` - % of successful queries
    - `avg_execution_time` - Average time per query
-   - Individual criterion averages:
-     - `avg_syntax_correctness`
-     - `avg_semantic_correctness`
-     - `avg_query_efficiency`
-     - `avg_data_correctness`
-     - `avg_completeness`
-     - `avg_natural_language`
-     - `avg_relevance`
-     - `avg_formatting`
+   - Individual criterion averages (5 criteria):
+     - `syntax_correctness_out_of_35`
+     - `semantic_correctness_out_of_30`
+     - `query_efficiency_out_of_15`
+     - `natural_language_out_of_15`
+     - `relevance_out_of_5`
 
 2. **Parameters Tab**: Evaluation configuration
    - `total_queries` - Number of queries evaluated
