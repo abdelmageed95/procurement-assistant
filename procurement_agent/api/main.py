@@ -84,7 +84,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
     active_connections[session_id] = websocket
 
     try:
-        # Send welcome message
+        # Send connected message
         await websocket.send_json({
             "type": "system",
             "message": "Connected to Procurement Agent",
@@ -106,7 +106,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                 "status": "typing"
             })
 
-            # Process message (always uses detailed explanations)
+            # Process message
             result = await workflow.process(
                 user_message=user_message,
                 session_id=session_id,
@@ -117,7 +117,6 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
             metadata = result.get("metadata", {})
             metadata["success"] = result.get("success", True)
 
-            # Add technical details for debugging
             # Two-tier approach: limited results for summary, complete results for downloads
             summary_results = result.get("query_results", [])
             complete_results = result.get("complete_results", [])
@@ -155,7 +154,6 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
 @app.get("/sessions")
 async def list_sessions():
     """List all conversation sessions"""
-    from ..memory import ShortTermMemory
     from pymongo import MongoClient
 
     client = MongoClient(Config.MONGO_URI)

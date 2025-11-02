@@ -39,7 +39,7 @@ class ProcurementWorkflow:
 
         workflow.add_node("memory_fetch", memory_fetch_node)
         workflow.add_node("router", router_node)
-        workflow.add_node("data_agent", procurement_agent_node)  # Renamed for clarity
+        workflow.add_node("data_agent", procurement_agent_node)
         workflow.add_node("chat_agent", chat_agent_node)
         workflow.add_node("memory_update", memory_update_node)
 
@@ -102,7 +102,7 @@ class ProcurementWorkflow:
         self,
         user_message: str,
         session_id: str,
-        user_id: str = "default"
+        user_id: str = "default",  # we didn't use this yet as we have single user( no auth, registration, login etc.)
     ) -> Dict[str, Any]:
         """
         Process a user message through the workflow

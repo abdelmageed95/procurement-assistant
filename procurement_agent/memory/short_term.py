@@ -51,24 +51,24 @@ class ShortTermMemory:
         messages.reverse()
         return messages
 
-    def get_context_summary(
-        self,
-        session_id: str,
-        limit: int = 10
-    ) -> str:
-        """Get a formatted context summary"""
-        messages = self.get_recent_messages(session_id, limit)
+    # def get_context_summary(
+    #     self,
+    #     session_id: str,
+    #     limit: int = 10
+    # ) -> str:
+    #     """Get a formatted context summary"""
+    #     messages = self.get_recent_messages(session_id, limit)
 
-        if not messages:
-            return "No previous conversation history."
+    #     if not messages:
+    #         return "No previous conversation history."
 
-        context_lines = []
-        for msg in messages:
-            role = msg["role"].capitalize()
-            content = msg["content"][:100]  # Truncate long messages
-            context_lines.append(f"{role}: {content}")
+    #     context_lines = []
+    #     for msg in messages:
+    #         role = msg["role"].capitalize()
+    #         content = msg["content"]  # [:100]  # Truncate long messages
+    #         context_lines.append(f"{role}: {content}")
 
-        return "\n".join(context_lines)
+    #     return "\n".join(context_lines)
 
     def clear_session(self, session_id: str):
         """Clear all messages for a session"""

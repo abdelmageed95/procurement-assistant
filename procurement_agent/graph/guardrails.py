@@ -76,8 +76,9 @@ class SafetyGuardrails:
         # 4. Basic PII detection (email, SSN patterns)
         metadata["checks_performed"].append("pii_check")
         pii_patterns = {
-            "email": r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
-            "ssn": r'\b\d{3}-\d{2}-\d{4}\b'
+            "email": r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
+            "ssn": r"\b\d{3}-\d{2}-\d{4}\b",
+            # TODO: bank cards number
         }
 
         for pii_type, pattern in pii_patterns.items():
@@ -144,7 +145,7 @@ def input_guardrails_node(state: Dict) -> Dict:
         state["validation_failed"] = True
         state["agent_response"] = f"Sorry, your input couldn't be processed: {error_msg}"
     else:
-        print(f"   [OK] Validation passed")
+        print("   [OK] Validation passed")
         if metadata.get("warnings"):
             print(f"   [WARNING] Warnings: {', '.join(metadata['warnings'])}")
         state["validation_failed"] = False
@@ -168,7 +169,7 @@ def output_guardrails_node(state: Dict) -> Dict:
         print("   Skipping (input validation failed)")
         return state
 
-    guardrails = SafetyGuardrails(openai_api_key=Config.OPENAI_API_KEY)
+    guardrails = SafetyGuardrails(openai_api_key=str(Config.OPENAI_API_KEY))
 
     agent_response = state.get("agent_response", "")
 
@@ -180,7 +181,7 @@ def output_guardrails_node(state: Dict) -> Dict:
         "metadata": metadata
     }
 
-    print(f"   [OK] Sanitization complete")
+    print("   [OK] Sanitization complete")
     if metadata.get("sanitization_performed"):
         print(f"   Actions: {', '.join(metadata['sanitization_performed'])}")
 

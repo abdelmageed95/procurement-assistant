@@ -1,11 +1,11 @@
 {
   "creation_date": {
     "sample_values": [
-      "2012-12-18 00:00:00",
-      "2013-11-13 00:00:00",
-      "2013-12-26 00:00:00",
-      "2013-04-02 00:00:00",
-      "2014-01-21 00:00:00"
+      "2013-09-11 00:00:00",
+      "2012-09-14 00:00:00",
+      "2013-09-04 00:00:00",
+      "2012-10-05 00:00:00",
+      "2012-08-23 00:00:00"
     ],
     "type": "datetime",
     "nullable": false,
@@ -14,25 +14,25 @@
   },
   "purchase_date": {
     "sample_values": [
-      "2013-12-19 00:00:00",
-      "2013-11-13 00:00:00",
-      "2012-12-21 00:00:00",
-      "2013-04-02 00:00:00",
-      "2014-01-21 00:00:00"
+      "2012-06-25 00:00:00",
+      "2012-08-17 00:00:00",
+      "2013-07-01 00:00:00",
+      "2012-08-31 00:00:00",
+      "2013-05-15 00:00:00"
     ],
     "type": "datetime",
     "nullable": true,
-    "null_percentage": 1.0,
+    "null_percentage": 5.0,
     "description": "Date of purchase order entered by the user; may be backdated, so creation date is primarily used.",
     "note": "Datetime object - use for date queries (creation_date preferred)"
   },
   "creation_date_str": {
     "sample_values": [
-      "04/02/2013",
-      "12/26/2013",
-      "11/13/2013",
-      "12/18/2012",
-      "01/21/2014"
+      "08/23/2012",
+      "10/05/2012",
+      "09/04/2013",
+      "09/14/2012",
+      "09/11/2013"
     ],
     "type": "str",
     "nullable": false,
@@ -40,21 +40,21 @@
   },
   "purchase_date_str": {
     "sample_values": [
-      "12/19/2013",
-      "12/21/2012",
-      "11/13/2013",
-      "04/02/2013",
-      "01/21/2014"
+      "05/15/2013",
+      "06/25/2012",
+      "08/31/2012",
+      "07/01/2013",
+      "08/17/2012"
     ],
     "type": "str",
     "nullable": true,
-    "null_percentage": 1.0,
+    "null_percentage": 5.0,
     "note": "Display only - use non-_str version for queries"
   },
   "fiscal_year": {
     "sample_values": [
-      "2014-2015",
       "2013-2014",
+      "2014-2015",
       "2012-2013"
     ],
     "type": "str",
@@ -63,24 +63,24 @@
   },
   "lpa_number": {
     "sample_values": [
-      "1-13-70-01A",
-      "1-11-87-17A",
-      "1-09-70-01B",
-      "B27164",
-      "None"
+      "5-08-89-15",
+      "None",
+      "1-09-70-03C",
+      "7-11-51-01",
+      "1-13-89-10"
     ],
     "type": "str",
     "nullable": true,
-    "null_percentage": 75.0,
+    "null_percentage": 73.0,
     "description": "Leveraged Procurement Agreement (Contract Number). Indicates contract spend if present."
   },
   "purchase_order_number": {
     "sample_values": [
-      "PO222319",
-      "4500207267",
-      "4D240761",
-      "X1271",
-      "LM130415"
+      "4500147327",
+      "11-88343",
+      "13G-LA01",
+      "11-201-0203",
+      "4500149564"
     ],
     "type": "str",
     "nullable": false,
@@ -88,19 +88,23 @@
   },
   "requisition_number": {
     "sample_values": [
-      "None"
+      "REQ0008777",
+      "None",
+      "REQ0014074",
+      "REQ0009990",
+      "REQ0013376"
     ],
-    "type": "NoneType",
+    "type": "str",
     "nullable": true,
-    "null_percentage": 100.0,
+    "null_percentage": 96.0,
     "description": "Requisition identifier; not unique across departments."
   },
   "acquisition_type": {
     "sample_values": [
-      "IT Services",
-      "NON-IT Goods",
       "IT Goods",
-      "NON-IT Services"
+      "NON-IT Goods",
+      "NON-IT Services",
+      "IT Services"
     ],
     "type": "str",
     "nullable": false,
@@ -108,24 +112,24 @@
   },
   "sub_acquisition_type": {
     "sample_values": [
-      "Interagency Agreements",
-      "Expert Witneses",
+      "UC, CSU, Community Colleges, and foundations / auxiliaries",
       "None",
+      "Contracts with Local Governments",
       "Subvention and Local Assistance",
-      "Emergency Contract"
+      "Expert Witneses"
     ],
     "type": "str",
     "nullable": true,
-    "null_percentage": 80.0,
+    "null_percentage": 75.0,
     "description": "Depends on the acquisition type used."
   },
   "acquisition_method": {
     "sample_values": [
-      "Informal Competitive",
-      "Emergency Purchase",
-      "Formal Competitive",
       "Statewide Contract",
-      "WSCA/Coop"
+      "State Programs",
+      "Services are specifically exempt by statute",
+      "Informal Competitive",
+      "Services are specifically exempt by policy"
     ],
     "type": "str",
     "nullable": false,
@@ -134,22 +138,23 @@
   "sub_acquisition_method": {
     "sample_values": [
       "Prison Industry Authority (PIA)",
-      "Services are specifically exempt by statute",
+      "Interagency Agreement",
+      "Fleet",
       "None",
-      "Fleet"
+      "Office of State Printing (OSP)"
     ],
     "type": "str",
     "nullable": true,
-    "null_percentage": 95.0,
+    "null_percentage": 89.0,
     "description": "Depends on the acquisition method used."
   },
   "department_name": {
     "sample_values": [
-      "Justice, Department of",
       "Corrections and Rehabilitation, Department of",
-      "Forestry and Fire Protection, Department of",
-      "Fish and Wildlife, Department of",
-      "Conservation, Department of"
+      "Health Care Services, Department of",
+      "State Hospitals, Department of",
+      "Alcoholic Beverage Control, Department of",
+      "Transportation, Department of"
     ],
     "type": "str",
     "nullable": false,
@@ -157,11 +162,11 @@
   },
   "supplier_code": {
     "sample_values": [
-      "1000531",
-      "1249060",
-      "1026437",
-      "15228",
-      "1006632"
+      "1008361",
+      "1000709",
+      "1743598",
+      "1038758",
+      "1744760"
     ],
     "type": "str",
     "nullable": false,
@@ -169,11 +174,11 @@
   },
   "supplier_name": {
     "sample_values": [
-      "Western Blue/Insight/Hewlett Packard",
-      "THE PRIMARY SOURCE",
-      "Alldata LLC",
-      "HEWLETT PACKARD",
-      "Bio-Oregon"
+      "3B INDUSTRIES INC",
+      "US FOODSERVICE",
+      "Regents of the University of California, Berkeley",
+      "County of Alameda",
+      "Battery Systems"
     ],
     "type": "str",
     "nullable": false,
@@ -181,34 +186,33 @@
   },
   "supplier_qualifications": {
     "sample_values": [
+      "CA-DVBE CA-MB CA-SB CA-SBE",
+      "CA-SB",
       "CA-DVBE CA-SB CDVBE",
-      "CA-MB CA-SB CA-SBE SB",
-      "CA-MB CA-SB",
       "None",
-      "CA-DVBE CA-MB CA-SB DBE SB"
+      "CA-MB CA-SB CA-SBE SB WOSB"
     ],
     "type": "str",
     "nullable": true,
-    "null_percentage": 61.0,
+    "null_percentage": 58.0,
     "description": "Identifies supplier as SB, SBE, DVBE, NP, or MB; can be multiple categories."
   },
   "supplier_zip_code": {
     "sample_values": [
-      "95742",
-      "95758",
-      "98632",
+      "90670",
       "95827",
-      "40511-1273"
+      "None",
+      "94612",
+      "73529"
     ],
     "type": "str",
     "nullable": true,
-    "null_percentage": 13.0,
+    "null_percentage": 15.0,
     "description": "Supplier zip code."
   },
   "cal_card": {
     "sample_values": [
-      "NO",
-      "YES"
+      "NO"
     ],
     "type": "str",
     "nullable": false,
@@ -216,11 +220,11 @@
   },
   "item_name": {
     "sample_values": [
-      "Fish Food",
-      "Ca Electronic Waste Recycling Fee",
-      "8 OZ. CUPS W/LIDS",
-      "Alldata 1 YR Renewal ALL DATA",
-      "printers"
+      "UC Agreement",
+      "INTENSIVE 24/7 TASK CHAIRS, STEEL & ROYAL BLUE",
+      "Disposable food trays",
+      "Trojan Deep Cycle Battery T-105; 6V",
+      "Local Assistance Grant"
     ],
     "type": "str",
     "nullable": false,
@@ -228,11 +232,11 @@
   },
   "item_description": {
     "sample_values": [
-      "Ca Electronic Waste Recycling Fee",
-      "8 OZ. CUPS W/LIDS",
-      "License fe",
-      "HP LaserJet Enterprise P3015dn Printer Monochrome",
-      "Bio Vita Fry 1.2mm"
+      "3/Compartment hinged disposable trays",
+      "Grant to local law enforcement agency.",
+      "INTENSIVE 24/7 TASK CHAIRS, STEEL & ROYAL BLUE",
+      "Research the impact on SPDs of mandatory transition to managed care.",
+      "Trojan Deep Cycle Battery T-105; 6V"
     ],
     "type": "str",
     "nullable": false,
@@ -240,11 +244,11 @@
   },
   "quantity": {
     "sample_values": [
-      "880",
-      "30",
-      "6",
-      "5",
-      "1"
+      "2",
+      "1680",
+      "1",
+      "100",
+      "54"
     ],
     "type": "int",
     "nullable": false,
@@ -253,11 +257,11 @@
   },
   "unit_price": {
     "sample_values": [
-      "108.09",
-      "1500.0",
-      "1.73",
-      "4.0",
-      "708.2"
+      "245375.0",
+      "5671.6",
+      "92.54",
+      "866.0",
+      "80859.0"
     ],
     "type": "float",
     "nullable": false,
@@ -266,11 +270,11 @@
   },
   "total_price": {
     "sample_values": [
-      "3541.0",
-      "1500.0",
-      "3242.7",
-      "24.0",
-      "1522.4"
+      "245375.0",
+      "5671.6",
+      "86600.0",
+      "4997.16",
+      "80859.0"
     ],
     "type": "float",
     "nullable": false,
@@ -279,11 +283,11 @@
   },
   "unit_price_str": {
     "sample_values": [
-      "$1.73",
-      "$4.00",
-      "$708.20",
-      "$1500.00",
-      "$108.09"
+      "$5671.60",
+      "$92.54",
+      "$866.00",
+      "$245375.00",
+      "$80859.00"
     ],
     "type": "str",
     "nullable": false,
@@ -291,11 +295,11 @@
   },
   "total_price_str": {
     "sample_values": [
-      "$3242.70",
-      "$1522.40",
-      "$3541.00",
-      "$1500.00",
-      "$24.00"
+      "$5671.60",
+      "$86600.00",
+      "$4997.16",
+      "$245375.00",
+      "$80859.00"
     ],
     "type": "str",
     "nullable": false,
@@ -303,121 +307,130 @@
   },
   "classification_codes": {
     "sample_values": [
-      "76122408",
-      "10121702",
-      "48101905",
-      "43212105",
-      "93151517"
+      "85101705",
+      "56101504",
+      "92101501\n92101504",
+      "52151506",
+      "26111703"
     ],
     "type": "str",
-    "nullable": false,
+    "nullable": true,
+    "null_percentage": 1.0,
     "description": "UNSPSC v14 codes for purchased items; may include multiple codes per purchase order."
   },
   "normalized_unspsc": {
     "sample_values": [
-      "76122408",
-      "10121702",
-      "48101905",
-      "43212105",
-      "93151517"
+      "85101705",
+      "92101501",
+      "56101504",
+      "52151506",
+      "26111703"
     ],
     "type": "str",
-    "nullable": false,
+    "nullable": true,
+    "null_percentage": 1.0,
     "description": "First 8 digits of the UNSPSC v14 code representing the purchase order."
   },
   "commodity_title": {
     "sample_values": [
-      "State county local waste or recycle fee",
-      "Food service cups or mugs",
-      "License or registration fee",
-      "Laser printers",
-      "Fish food pellets"
+      "Public health administration",
+      "Domestic disposable food containers",
+      "Chairs",
+      "Vehicle batteries",
+      "Policing services"
     ],
     "type": "str",
-    "nullable": false,
+    "nullable": true,
+    "null_percentage": 1.0,
     "description": "Commodity title correlated with the 8-digit Normalized UNSPSC."
   },
   "class": {
     "sample_values": [
-      "43212100",
-      "10121700",
-      "93151500",
-      "48101900",
-      "76122400"
+      "56101500",
+      "92101500",
+      "85101700",
+      "52151500",
+      "26111700"
     ],
     "type": "str",
-    "nullable": false,
+    "nullable": true,
+    "null_percentage": 1.0,
     "description": "Class number correlated with the 8-digit Normalized UNSPSC."
   },
   "class_title": {
     "sample_values": [
-      "Refuse disposal and treatment fees",
-      "Public administration",
-      "Tabletop and serving equipment",
-      "Fish food",
-      "Computer printers"
+      "Batteries and cells and accessories",
+      "Health administration services",
+      "Domestic disposable kitchenware",
+      "Police services",
+      "Furniture"
     ],
     "type": "str",
-    "nullable": false,
+    "nullable": true,
+    "null_percentage": 1.0,
     "description": "Class title correlated with the 8-digit Normalized UNSPSC."
   },
   "family": {
     "sample_values": [
-      "93150000",
-      "76120000",
-      "48100000",
-      "10120000",
-      "43210000"
+      "52150000",
+      "92100000",
+      "56100000",
+      "26110000",
+      "85100000"
     ],
     "type": "str",
-    "nullable": false,
+    "nullable": true,
+    "null_percentage": 1.0,
     "description": "Family number correlated with the 8-digit Normalized UNSPSC."
   },
   "family_title": {
     "sample_values": [
-      "Computer Equipment and Accessories",
-      "Institutional food services equipment",
-      "Public administration and finance services",
-      "Refuse disposal and treatment",
-      "Animal feed"
+      "Domestic kitchenware and kitchen supplies",
+      "Comprehensive health services",
+      "Public order and safety",
+      "Accommodation furniture",
+      "Batteries and generators and kinetic power transmission"
     ],
     "type": "str",
-    "nullable": false,
+    "nullable": true,
+    "null_percentage": 1.0,
     "description": "Family title correlated with the 8-digit Normalized UNSPSC."
   },
   "segment": {
     "sample_values": [
-      "93000000",
-      "48000000",
-      "76000000",
-      "43000000",
-      "10000000"
+      "26000000",
+      "85000000",
+      "92000000",
+      "56000000",
+      "52000000"
     ],
     "type": "str",
-    "nullable": false,
+    "nullable": true,
+    "null_percentage": 1.0,
     "description": "Segment number correlated with the 8-digit Normalized UNSPSC."
   },
   "segment_title": {
     "sample_values": [
-      "Politics and Civic Affairs Services",
-      "Industrial Cleaning Services",
-      "Live Plant and Animal Material and Accessories and Supplies",
-      "Information Technology Broadcasting and Telecommunications",
-      "Service Industry Machinery and Equipment and Supplies"
-    ],
-    "type": "str",
-    "nullable": false
-  },
-  "location": {
-    "sample_values": [
-      "95742\n(38.585855, -121.217204)",
-      "40511-1273\n(38.112378, -84.499472)",
-      "95827\n(38.563097, -121.328511)",
-      "95758\n(38.424655, -121.438065)",
-      "98632\n(46.173162, -123.011746)"
+      "Domestic Appliances and Supplies and Consumer Electronic Products",
+      "Furniture and Furnishings",
+      "Healthcare Services",
+      "National Defense and Public Order and Security and Safety Services",
+      "Power Generation and Distribution Machinery and Accessories"
     ],
     "type": "str",
     "nullable": true,
-    "null_percentage": 13.0
+    "null_percentage": 1.0
+  },
+  "location": {
+    "sample_values": [
+      "None",
+      "94612\n(37.809845, -122.269515)",
+      "73529\n(34.361458, -97.971748)",
+      "90670\n(33.933818, -118.066781)",
+      "95827\n(38.563097, -121.328511)"
+    ],
+    "type": "str",
+    "nullable": true,
+    "null_percentage": 15.0
   }
 }

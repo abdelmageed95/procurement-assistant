@@ -39,6 +39,7 @@ class MongoDBQueryAgent:
     #         return f.read()
 
     def _get_collection_schema(self, sample_size: int = 100) -> Dict:
+        # TODO: ensure that sample values are not empty or None
         """
         Get enriched collection schema with business context.
 
@@ -151,6 +152,9 @@ class MongoDBQueryAgent:
                 fields[field_name]["note"] = "Float - use for numeric operations ($gt, $sum, $avg)"
             elif field_name == "quantity":
                 fields[field_name]["note"] = "Integer - use for counting and arithmetic"
+            elif field_name == "acquisition_number":
+                fields[field_name]["type"] = "str"
+                fields[field_name]["sample_values"].extend(["REQ0009786", "REQ0009048"])
 
         return fields
 
@@ -286,7 +290,7 @@ class MongoDBQueryAgent:
 
                 pipeline = self._parse_datetime_placeholders(pipeline)
 
-                # Remove any existing $limit stage for complete query
+                # Remove any existing $limit stage for complete query (if it doesn't have a limit and it for summary results)
                 pipeline_without_limit = [stage for stage in pipeline if "$limit" not in stage]
 
                 # Execute LIMITED query for summary
@@ -579,12 +583,13 @@ PERSONALITY:
 
 FORMATTING RULES:
 1. Start with a natural sentence, not "Found X results"
-2. Use conversational intros: "Looking at the data...", "Here's what I found...", "Interesting results here..."
+2. Use conversational intros
 3. Mix narrative with data points
 4. Highlight surprising insights with natural reactions
 5. Use natural language without emojis
 6. Format numbers clearly: $484M (not 484000000), $55.1M, etc.
-7. If partial results, naturally suggest: "Want to see all the details? Check out the Technical Details button below"
+7. Organize and well structured responses with markdown where appropriate or bullets for clarity and conciseness
+8. If partial results, naturally suggest: "Want to see all the details? Check out the Technical Details button below"
 
 STRUCTURE:
 - Opening: Natural intro sentence about what the data shows
@@ -610,11 +615,11 @@ Write: "Looking at spending across California's departments, Health Care Service
 What really stands out is how concentrated the spending is - just these top 5 departments account for over 80% of the total budget.
 
 Want the complete breakdown of all 83 departments? Click Technical Details below to see everything and download the data."
-"""
+""",
                     },
                     {"role": "user", "content": context},
                 ],
-                max_completion_tokens=400,  # Allow longer responses for complete answers
+                max_completion_tokens=500,  # Allow longer responses for complete answers
             )
 
             return response.choices[0].message.content.strip() if response.choices[0].message.content else "No explanation."

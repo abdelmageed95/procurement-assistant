@@ -115,25 +115,25 @@ class LongTermMemory:
 
         return similar_conversations
 
-    def get_context_summary(
-        self,
-        query: str,
-        top_k: int = 3,
-        user_id: str = None
-    ) -> str:
-        """Get a formatted summary of relevant past conversations"""
-        similar = self.search_similar_conversations(query, top_k, user_id)
+    # def get_context_summary(
+    #     self,
+    #     query: str,
+    #     top_k: int = 3,
+    #     user_id: str = None
+    # ) -> str:
+    #     """Get a formatted summary of relevant past conversations"""
+    #     similar = self.search_similar_conversations(query, top_k, user_id)
 
-        if not similar:
-            return "No relevant past conversations found."
+    #     if not similar:
+    #         return "No relevant past conversations found."
 
-        context_lines = ["Relevant past conversations:"]
-        for i, conv in enumerate(similar, 1):
-            metadata = conv['metadata']
-            user_msg = metadata.get('user_message', '')[:80]
-            assistant_msg = metadata.get('assistant_response', '')[:80]
-            context_lines.append(
-                f"{i}. User: {user_msg}... | Assistant: {assistant_msg}..."
-            )
+    #     context_lines = ["Relevant past conversations:"]
+    #     for i, conv in enumerate(similar, 1):
+    #         metadata = conv['metadata']
+    #         user_msg = metadata.get('user_message', '')[:80]
+    #         assistant_msg = metadata.get('assistant_response', '')[:80]
+    #         context_lines.append(
+    #             f"{i}. User: {user_msg}... | Assistant: {assistant_msg}..."
+    #         )
 
-        return "\n".join(context_lines)
+    #     return "\n".join(context_lines)

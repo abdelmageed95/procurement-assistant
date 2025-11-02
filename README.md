@@ -243,10 +243,12 @@ Input: "What is the average order value?"
 
 ```mermaid
 graph TD
-    START([User Message]) --> Guard[Safety Guardrails]
+    START([User Message]) --> Guard[Input Guardrails]
 
-    Guard -->|Safe| Router[Router Agent]
+    Guard -->|Safe| Fetch[Fetch Memory]
     Guard -->|Unsafe| END[Reject]
+
+    Fetch --> Router[Router Agent]
 
     Router -->|data_query| DataAgent[Data Query Agent]
     Router -->|general_chat| ChatAgent[Chat Agent]
@@ -254,18 +256,21 @@ graph TD
     DataAgent --> QueryGen[Generate MongoDB Query]
     QueryGen --> Execute[Execute Query]
     Execute --> Explain[LLM Explanation]
-    Explain --> Memory[Memory Update]
+    Explain --> MemUpdate[Memory Update]
 
     ChatAgent --> ChatLLM[Generate Response]
-    ChatLLM --> Memory
+    ChatLLM --> MemUpdate
 
-    Memory --> Output[Output Guardrails]
+    MemUpdate --> Output[Output Guardrails]
     Output --> END([Return Response])
 
     style Router fill:#FFE4B5
     style DataAgent fill:#87CEEB
     style ChatAgent fill:#98FB98
     style Guard fill:#FFB6C1
+    style Fetch fill:#DDA0DD
+    style MemUpdate fill:#DDA0DD
+    style Output fill:#FFB6C1
 ```
 
 ---
@@ -450,17 +455,62 @@ Click "Technical Details" to see:
 
 ---
 
-## 📥 Data Import
+## Data Import
 
-### CSV to MongoDB Importer
+The project includes two methods for dataset setup and import:
 
-The project includes a standalone command-line tool for importing CSV data into MongoDB with proper type conversion.
+### Method 1: Automated Setup (Recommended)
 
-#### **Quick Start:**
+The `setup_dataset.py` script handles the complete dataset setup process automatically:
+
+**Features:**
+- Downloads dataset from Kaggle automatically
+- Creates data directory if needed
+- Extracts ZIP file
+- Renames CSV file (replaces spaces with underscores)
+- Imports to MongoDB with proper type conversion
+- All-in-one automated process
+
+**Quick Start:**
+
+```bash
+# Complete automated setup (recommended for first-time setup)
+python setup_dataset.py
+
+# Custom database
+python setup_dataset.py --database my_db
+
+# Remote MongoDB
+python setup_dataset.py --mongo-uri mongodb://host:27017/
+
+# Keep ZIP file after extraction
+python setup_dataset.py --keep-zip
+
+# Don't clear existing data
+python setup_dataset.py --no-clear
+```
+
+**What it does:**
+1. Downloads: `https://www.kaggle.com/api/v1/datasets/download/sohier/large-purchases-by-the-state-of-ca`
+2. Saves to: `data/large-purchases-by-the-state-of-ca.zip`
+3. Extracts ZIP file to `data/` directory
+4. Renames CSV file (spaces → underscores)
+5. Imports to MongoDB with proper type conversion
+6. Cleans up ZIP file (optional)
+
+**Requirements:**
+- `curl` command must be installed
+- Internet connection for download
+
+### Method 2: Manual CSV Import
+
+If you already have the CSV file, use the standalone importer:
+
+**Quick Start:**
 
 ```bash
 # Basic usage
-python import_csv_to_mongodb.py PURCHASE-ORDER_SAMPLE.csv
+python import_csv_to_mongodb.py data.csv
 
 # Custom database and collection
 python import_csv_to_mongodb.py data.csv --database my_db --collection orders
@@ -475,7 +525,7 @@ python import_csv_to_mongodb.py data.csv --batch-size 5000
 python import_csv_to_mongodb.py data.csv --no-clear
 ```
 
-#### **Features:**
+### Common Features (Both Methods)
 
 **Data Type Conversion:**
 - Dates: `"01/15/2013"` → `datetime(2013, 1, 15)`
@@ -484,6 +534,19 @@ python import_csv_to_mongodb.py data.csv --no-clear
 - Empty strings → `None` (null)
 
 **Command-Line Arguments:**
+
+**setup_dataset.py** (Automated):
+| Argument | Type | Default | Description |
+|----------|------|---------|-------------|
+| `--data-dir` | Optional | `data` | Data directory path |
+| `--mongo-uri` | Optional | `mongodb://localhost:27017/` | MongoDB URI |
+| `--database` | Optional | `procurement_db` | Database name |
+| `--collection` | Optional | `purchase_orders` | Collection name |
+| `--batch-size` | Optional | `1000` | Batch insert size |
+| `--no-clear` | Flag | False | Append mode (don't clear) |
+| `--keep-zip` | Flag | False | Keep ZIP after extraction |
+
+**import_csv_to_mongodb.py** (Manual):
 | Argument | Type | Default | Description |
 |----------|------|---------|-------------|
 | `csv_file` | **Required** | - | Path to CSV file |
@@ -493,30 +556,14 @@ python import_csv_to_mongodb.py data.csv --no-clear
 | `--batch-size` | Optional | `1000` | Batch insert size |
 | `--no-clear` | Flag | False | Append mode (don't clear) |
 
-**Progress Tracking:**
-```
-CALIFORNIA PROCUREMENT DATA IMPORTER
-Connected to MongoDB: procurement_db.purchase_orders
-Cleared 0 existing documents
-Processing CSV: data.csv
-   Batch size: 1000
 
-   Inserted 1000 rows...
-   Inserted 2000 rows...
-   Inserted 3000 rows...
-
-IMPORT SUMMARY
-Total rows processed:    3,437
-Dates converted:         3,437
-Prices converted:        3,437
-Errors:                  0
-
-Collection 'purchase_orders' now has 3,437 documents
-```
-
-#### **Help:**
+### Help
 
 ```bash
+# Automated setup help
+python setup_dataset.py --help
+
+# Manual import help
 python import_csv_to_mongodb.py --help
 ```
 
@@ -608,36 +655,30 @@ Overall Score (1):
 
 ### **Evaluation Criteria:**
 
-The framework uses a weighted scoring system (0-100 points) across three main dimensions:
+The framework uses a weighted scoring system (0-100 points) across two main dimensions:
 
-#### **1. Query Generation Quality (50%)**
+#### **1. Query Generation Quality (80%)**
 
 | Criterion | Points | Description | Evaluation Target |
 |-----------|--------|-------------|-------------------|
-| **Syntax Correctness** | 15 | Valid MongoDB syntax, correct operators, valid field names (schema-checked) | MongoDB Query JSON |
-| **Semantic Correctness** | 20 | Query matches user intent, correct fields/operations | MongoDB Query JSON |
+| **Syntax Correctness** | 35 | Valid MongoDB syntax, correct operators, valid field names (schema-checked), proper date format | MongoDB Query JSON |
+| **Semantic Correctness** | 30 | Query matches user intent, correct fields/operations, proper date handling | MongoDB Query JSON |
 | **Query Efficiency** | 15 | Early filters, proper $limit, index-friendly, optimal structure | MongoDB Query JSON |
 
-#### **2. Result Accuracy (30%)**
+#### **2. Response Quality (20%)**
 
 | Criterion | Points | Description | Evaluation Target |
 |-----------|--------|-------------|-------------------|
-| **Data Correctness** | 20 | Accurate results, reasonable numbers, no fabricated data | Response |
-| **Completeness** | 10 | All requested data returned, no truncation | Response |
-
-#### **3. Response Quality (20%)**
-
-| Criterion | Points | Description | Evaluation Target |
-|-----------|--------|-------------|-------------------|
-| **Natural Language** | 10 | Conversational, readable, professional tone | Response |
+| **Natural Language** | 15 | Conversational, readable, professional tone | Response |
 | **Relevance** | 5 | Directly addresses query, focused | Response |
-| **Formatting** | 5 | Well-structured, easy to scan | Response |
 
 ### **Features:**
 
 **LLM-as-Judge Evaluation:**
-- Uses GPT-4o-mini to evaluate semantic correctness and response quality
+- Uses GPT-5 to evaluate all 5 criteria with detailed rationales
+- Evaluates actual MongoDB queries (not just responses)
 - Provides objective, consistent scoring across runs
+- Includes special date format awareness (`{"__datetime__": "YYYY-MM-DD"}`)
 
 **MLflow Integration:**
 - Tracks all metrics, parameters, and artifacts
@@ -994,7 +1035,7 @@ For in-depth information about specific system components, see the specialized d
 
 **Evaluation Framework**
 - [READMEs/EVALUATION.md](READMEs/EVALUATION.md)
-- Unified evaluation system with 7 criteria (100-point scale)
+- Unified evaluation system with 5 criteria (100-point scale)
 - MLflow GenAI integration
 - Custom judges and scoring
 - Result analysis and visualization
@@ -1061,8 +1102,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **LLM**: gpt-4o-mini (cost-optimized)
 - **Response Style**: Natural, conversational, engaging
 - **Data Tools**: CSV importer with command-line interface
-- **Evaluation**: Comprehensive framework with MLflow tracking (7 criteria, 100-point scale, 53 test queries)
-- **Evaluation Scoring**: 3-tier system (Query Gen 45%, Accuracy 35%, Quality 20%)
+- **Evaluation**: Comprehensive framework with MLflow tracking (5 criteria, 100-point scale, 53 test queries)
+- **Evaluation Scoring**: 2-tier system (Query Gen 80%, Response Quality 20%)
 - **Auto-Generated Files**: collection_schema.json (saved on startup)
 
 ---

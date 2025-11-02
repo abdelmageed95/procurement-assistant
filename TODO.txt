@@ -1,0 +1,7 @@
+- use pageniation for chat messages
+- use langsmith
+- upgrade basic guardrails to a comprehensive, solid and library-based guardrails
+- block prompt injection guardrails
+- ensure that sample values are not empty or None
+- ensure that sample values are not empty or None --> in _get_collection_schema
+  in procurement_agent/mongodb_query.py  

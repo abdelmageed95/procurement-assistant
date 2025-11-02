@@ -136,6 +136,6 @@ def memory_update_node(state: Dict) -> Dict:
         )
         print(f"Memory updated for session {session_id}")
     else:
-        print(f"Skipped long-term storage (duplicate)")
+        print("Skipped long-term storage (duplicate)")
 
     return state

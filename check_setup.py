@@ -108,7 +108,7 @@ def main():
             print(f"[FAILED] {message}")
             all_passed = False
 
-    print()
+    print()  # blank line
     print("=" * 80)
 
     if all_passed:
