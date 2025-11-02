@@ -352,7 +352,7 @@ pip install -r requirements.txt
 
 ### Step 4: Set Up Environment Variables
 
-Edit `.env`:
+Edit `example.env` and rename it `.env`:
 
 ```env
 # OpenAI Configuration
@@ -375,66 +375,35 @@ LONG_TERM_TOP_K=3
 
 ### Step 5: Load Procurement Data
 
-**Option A: Import from CSV**
+**Option A: Automatic download and import to MongoDB**
 ```bash
-mongoimport --db procurement_db --collection purchase_orders \
-  --type csv --headerline --file procurement_data.csv
+python3 setup_dataset.py
 ```
 
-**Option B: Use existing MongoDB**
-Update `MONGO_URI` to point to your existing database.
+**Option B: Only import if you have the csv in your data dir**
+```bash
+python3 import_csv_to_mongodb.py
+```
 
 ### Step 6: Run the Application
 
 ```bash
-cd procurement_agent/api
-python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
+python3 run_server.py
 ```
-
 Access the application at: **http://localhost:8000**
+
+### Step 7: Evaluate
+```bash
+python evaluate.py  
+
+# View results
+mlflow ui --port 5000
+# Navigate to: http://localhost:5000
+```
 
 ---
 
 ##  Usage
-
-### Example Conversations
-
-#### **General Chat**
-```
-User: "Hello!"
-Agent: "Hi there! How can I help you?"
-```
-
-#### **Data Query with Complete Results**
-```
-User: "What was the total spending by department?"
-
-Agent: "Looking at spending across California's departments, Health
-Care Services absolutely dominates with $484M - that's nearly 65%
-of all procurement spending!
-
-**Health Care Services** leads the pack at $484.4M
-**Water Resources** comes in second at $55.1M
-**Transportation** rounds out the top three at $54.3M
-**Public Health** follows at $43.6M
-**Corrections and Rehabilitation** at $25.2M
-
-What really stands out is how concentrated the spending is - just
-these top 5 departments account for over 80% of the total budget.
-
-Want the complete breakdown of all 83 departments? Click Technical
-Details below to see everything and download the data."
-
-[Technical Details Button]
-```
-
-Click "Technical Details" to see:
-- All 83 results in scrollable JSON
-- Download CSV button (opens in Excel)
-- Download JSON button (for analysis)
-- Exact MongoDB query used
-
-
 
 ### Supported Query Types
 
