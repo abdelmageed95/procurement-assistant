@@ -1,6 +1,6 @@
 #  Procurement Data Assistant
 
-A production-ready, intelligent conversational AI system that analyzes  purchase orders using natural language queries, MongoDB aggregations, and multi-agent routing.
+An intelligent multi-agent system for procurement analysis
 
 ![Python](https://img.shields.io/badge/python-3.10+-blue.svg)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)
@@ -12,8 +12,8 @@ A production-ready, intelligent conversational AI system that analyzes  purchase
 ##  Table of Contents
 
 - [Overview](#overview)
-- [Key Features](#key-features)
 - [System Architecture](#system-architecture)
+- [Key Features](#key-features)
 - [Project Structure](#project-structure)
 - [Installation](#installation)
 - [Configuration](#configuration)
@@ -39,7 +39,7 @@ This project implements a **specialized multi-agent conversational system** for 
 ### **Core Capabilities:**
 -  **Intelligent Query Generation** - Natural language → MongoDB queries using OpenAI function calling
 -  **Dual Memory System** - Short-term (MongoDB) + Long-term (ChromaDB) for context-aware responses
--  **Safety Guardrails** - Input/output validation focused on safety (not topic restriction)
+-  **Safety Guardrails** - Input/output validation focused on safety
 -  **Complete Data Access** - View all results with Technical Details modal + CSV/JSON downloads
 -  **Natural Language Responses** - Engaging, conversational explanations (not robotic)
 -  **Real-time WebSocket** - Instant query results and detailed explanations
@@ -48,25 +48,92 @@ This project implements a **specialized multi-agent conversational system** for 
 
 ---
 
+## System Architecture
+
+### High-Level Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                         User Input                          │
+└──────────────────────┬──────────────────────────────────────┘
+                       ↓
+┌─────────────────────────────────────────────────────────────┐
+│                   Safety Guardrails                         │
+│  • Length limits  • Harmful content  • PII detection        │
+└──────────────────────┬──────────────────────────────────────┘
+                       ↓
+┌─────────────────────────────────────────────────────────────┐
+│                    Router  (GPT-4o-mini)                    │
+│           Classifies: data_query OR general_chat            │
+└──────┬──────────────────────────────────────────┬───────────┘
+       │                                          │
+       ↓                                          ↓
+┌─────────────────────┐              ┌─────────────────────────┐
+│   Data Query Agent  │              │    General Chat Agent   │
+│   • MongoDB Query   │              │   • Greetings           │
+│   • LLM Explanation │              │   • Help & Guidance     │
+│   • Technical Data  │              │   • Conversation        │
+└─────────┬───────────┘              └──────────┬──────────────┘
+          │                                     │
+          ↓                                     ↓
+┌─────────────────────────────────────────────────────────────┐
+│                    Memory System                            │
+│         Short-term (MongoDB)  +  Long-term (ChromaDB)       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Router Decision Logic
+
+The router uses **GPT-4o-mini** to classify user intent into two categories:
+
+**1. data_query** - Questions about California procurement data
+- Examples: "What's the average order value?", "How many purchases in 2014?", "Top suppliers"
+- Routes to: **Data Agent** → MongoDB query → Data-driven response
+
+**2. general_chat** - Greetings, help requests, clarifications, thank you
+- Examples: "Hello", "Thanks", "What can you do?", "How does this work?"
+- Routes to: **Chat Agent** → Conversational response
+- When uncertain → general_chat (safer default)
+
+### LangGraph Workflow
+
+```mermaid
+graph TD
+    START([User Message]) --> Guard[Input Guardrails]
+
+    Guard -->|Safe| Fetch[Fetch Memory]
+    Guard -->|Unsafe| END[Reject]
+
+    Fetch --> Router[Router Agent]
+
+    Router -->|data_query| DataAgent[Data Query Agent]
+    Router -->|general_chat| ChatAgent[Chat Agent]
+
+    DataAgent --> QueryGen[Generate MongoDB Query]
+    QueryGen --> Execute[Execute Query]
+    Execute --> Explain[LLM Explanation]
+    Explain --> MemUpdate[Memory Update]
+
+    ChatAgent --> ChatLLM[Generate Response]
+    ChatLLM --> MemUpdate
+
+    MemUpdate --> Output[Output Guardrails]
+    Output --> END([Return Response])
+
+    style Router fill:#FFE4B5
+    style DataAgent fill:#87CEEB
+    style ChatAgent fill:#98FB98
+    style Guard fill:#FFB6C1
+    style Fetch fill:#DDA0DD
+    style MemUpdate fill:#DDA0DD
+    style Output fill:#FFB6C1
+```
+
+---
+
 ##  Key Features
 
-### 1. **Intelligent Multi-Agent Routing** 
-
-The system automatically classifies user intent and routes to the appropriate agent:
-
-```
-User Message → Router Agent → Decision:
-                              ├─ Data Query → MongoDB Agent
-                              └─ General Chat → Chat Agent
-```
-
-**Examples:**
-- "Hello!" → Chat Agent (greeting)
-- "What is the average order value?" → Data Agent (query)
-- "Thanks!" → Chat Agent (acknowledgment)
-- "Show me top 5 suppliers" → Data Agent (aggregation)
-
-### 2. **Complete Data Visibility with Two-Tier Query System** 
+### 1. **Complete Data Visibility with Two-Tier Query System** 
 
 **Problem:** Users asking "What was the total spending by department?" need to see ALL results, not just the first 100. 
 
@@ -103,16 +170,7 @@ Technical Details below to see everything and download the data."
 -  **Safety limits** - 10K max prevents memory issues
 -  **Transparency** - Clear messaging about total vs available counts
 
-### 3. **Natural, Engaging Responses** 
-
-**Personality:**
-- Conversational not robotic
-- Enthusiastic about insights and patterns
-- Uses natural transitions
-- Tells a story with the data
-- Highlights surprising findings
-
-### 4. **Session Persistence** 
+### 2. **Session Persistence** 
 
 **Features:**
 - Sessions persist across page refreshes (localStorage)
@@ -127,7 +185,7 @@ Technical Details below to see everything and download the data."
 - **History** button - Browse all past sessions
 - **Clear Chat** button - Clear current session
 
-### 5. **Safety-Focused Guardrails** 
+### 3. **Safety-Focused Guardrails** 
 
 -  Safety checks only (allows chat + data queries)
 
@@ -145,7 +203,7 @@ Technical Details below to see everything and download the data."
 - Data queries
 - Clarification questions
 
-### 6. **Intelligent Query System**
+### 4. **Intelligent Query System**
 
 - **Natural Language to MongoDB**: Converts questions like "How many purchases in 2014?" to MongoDB aggregation pipelines
 - **Function Calling**: Uses OpenAI's function calling API (`tool_choice="required"`) for structured query generation
@@ -153,7 +211,7 @@ Technical Details below to see everything and download the data."
 - **Query Validation**: Ensures valid MongoDB operations (find, aggregate, count)
 - **Error Recovery**: Helpful error messages with retry functionality
 
-### 7. **Advanced Memory Management**
+### 5. **Advanced Memory Management**
 
 **Short-Term Memory (MongoDB):**
 - Stores recent conversation history
@@ -167,7 +225,7 @@ Technical Details below to see everything and download the data."
 - Smart duplicate detection (last 5 messages)
 - Context retrieval for similar queries
 
-### 8. **Data Analysis Capabilities**
+### 6. **Data Analysis Capabilities**
 
 - **Aggregations**: Group by department, supplier, date ranges
 - **Filtering**: Find orders by price, date, department
@@ -175,7 +233,7 @@ Technical Details below to see everything and download the data."
 - **Sorting**: Order results by any field
 - **Date Operations**: Year, quarter, month-based analysis
 
-### 9. **Modern User Interface**
+### 7. **Modern User Interface**
 
 - **Real-time Chat**: WebSocket-based instant messaging
 - **Smart Resend Button**: Automatically removes old responses when retrying
@@ -183,95 +241,6 @@ Technical Details below to see everything and download the data."
 - **Welcome Message**: Fades on first user message
 - **Responsive Design**: Works on desktop, tablet, and mobile
 - **Professional Styling**: Calm color palette, smooth animations
-
----
-
-## System Architecture
-
-### High-Level Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                         User Input                           │
-└──────────────────────┬──────────────────────────────────────┘
-                       ↓
-┌─────────────────────────────────────────────────────────────┐
-│                   Safety Guardrails                          │
-│  • Length limits  • Harmful content  • PII detection         │
-└──────────────────────┬──────────────────────────────────────┘
-                       ↓
-┌─────────────────────────────────────────────────────────────┐
-│                    Router Agent (GPT-4o-mini)                │
-│  Classifies: data_query OR general_chat                     │
-└──────┬──────────────────────────────────────────┬───────────┘
-       │                                           │
-       ↓                                           ↓
-┌─────────────────────┐              ┌─────────────────────────┐
-│   Data Query Agent  │              │    General Chat Agent    │
-│   • MongoDB Query   │              │   • Greetings           │
-│   • LLM Explanation │              │   • Help & Guidance     │
-│   • Technical Data  │              │   • Conversation        │
-└─────────┬───────────┘              └──────────┬──────────────┘
-          │                                     │
-          ↓                                     ↓
-┌─────────────────────────────────────────────────────────────┐
-│                    Memory System                             │
-│  Short-term (MongoDB)  +  Long-term (ChromaDB)              │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Router Decision Logic
-
-```
-Input: "Hello!"
-  ↓ Router Analysis
-  → Keywords: greeting, casual
-  → Decision: general_chat
-  → Route to: Chat Agent
-  → Response: "Hi! I'm here to help..."
-
-Input: "What is the average order value?"
-  ↓ Router Analysis
-  → Keywords: what is, average, value (data question)
-  → Decision: data_query
-  → Route to: Data Agent
-  → MongoDB Query: { $group: { _id: null, avg: { $avg: "$total_price" }}}
-  → Response: "The average order value is approximately $237,301.49..."
-```
-
-### LangGraph Workflow
-
-```mermaid
-graph TD
-    START([User Message]) --> Guard[Input Guardrails]
-
-    Guard -->|Safe| Fetch[Fetch Memory]
-    Guard -->|Unsafe| END[Reject]
-
-    Fetch --> Router[Router Agent]
-
-    Router -->|data_query| DataAgent[Data Query Agent]
-    Router -->|general_chat| ChatAgent[Chat Agent]
-
-    DataAgent --> QueryGen[Generate MongoDB Query]
-    QueryGen --> Execute[Execute Query]
-    Execute --> Explain[LLM Explanation]
-    Explain --> MemUpdate[Memory Update]
-
-    ChatAgent --> ChatLLM[Generate Response]
-    ChatLLM --> MemUpdate
-
-    MemUpdate --> Output[Output Guardrails]
-    Output --> END([Return Response])
-
-    style Router fill:#FFE4B5
-    style DataAgent fill:#87CEEB
-    style ChatAgent fill:#98FB98
-    style Guard fill:#FFB6C1
-    style Fetch fill:#DDA0DD
-    style MemUpdate fill:#DDA0DD
-    style Output fill:#FFB6C1
-```
 
 ---
 
@@ -540,7 +509,7 @@ python import_csv_to_mongodb.py --help
 
 ## Evaluation Framework
 
-The project includes a **unified evaluation framework (v2.1)** that evaluates the actual MongoDB queries generated by the system using 8 LLM-as-judge criteria with comprehensive MLflow tracking.
+Evaluates the actual MongoDB queries generated by the system using 8 LLM-as-judge criteria with comprehensive MLflow tracking.
 
 ### **Quick Start:**
 
@@ -556,14 +525,14 @@ mlflow ui --port 5000
 
 ### **Key Innovation: Direct Query Evaluation**
 
-Unlike typical LLM evaluation frameworks that only assess final responses, this system evaluates the **actual MongoDB queries**:
+Evaluates the **actual MongoDB queries**:
 
 - **Output Format**: System returns both the generated MongoDB query and the final response
 - **Query Judges**: Syntax, Semantic, and Efficiency judges evaluate the MongoDB query JSON
 - **Response Judges**: Data Correctness, Completeness, Natural Language, Relevance, and Formatting judges evaluate the response
 - **Schema Integration**: Syntax judge receives the full MongoDB collection schema for field validation
 
-### **Unified Evaluation System:**
+### **Evaluation System:**
 
 The `evaluate.py` framework combines:
 - **MLflow GenAI Pipeline**: Standardized `mlflow.genai.evaluate()` framework
@@ -574,7 +543,7 @@ The `evaluate.py` framework combines:
 
 ### **Advanced Features:**
 
-The evaluation framework includes comprehensive MLflow GenAI capabilities:
+The evaluation includes comprehensive MLflow GenAI capabilities:
 
 **MLflow Artifacts Structure:**
 ```
@@ -814,85 +783,7 @@ python evaluate_system.py --help
 
 ---
 
-##  Query Examples
-
-### 1. Aggregation with Complete Data Access
-
-**Query:** "What was the total spending by department?"
-
-**Generated MongoDB:**
-```json
-{
-  "operation": "aggregate",
-  "pipeline": [
-    {"$group": {"_id": "$department_name", "total_spending": {"$sum": "$total_price"}}},
-    {"$sort": {"total_spending": -1}},
-    {"$limit": 100}
-  ]
-}
-```
-
-**Chat Response:**
-```
-Looking at spending across California's departments, Health Care
-Services absolutely dominates with $484M...
-
-[Shows top 15 results with insights]
-
-Click Technical Details to see all 83 departments and download data.
-```
-
-**Technical Details Modal:**
-- Shows ALL 83 results
-- Download CSV: `query-results-1234567890.csv`
-- Download JSON: `query-results-1234567890.json`
-
-### 2. Simple Count Query
-
-**Query:** "How many purchases in 2014?"
-
-**Generated MongoDB:**
-```json
-{
-  "operation": "aggregate",
-  "pipeline": [
-    {"$match": {"creation_date": {"$gte": {"__datetime__": "2014-01-01"}, "$lt": {"__datetime__": "2015-01-01"}}}},
-    {"$count": "total"}
-  ]
-}
-```
-
-**Response:** "Looking at 2014, California made 12,543 procurement purchases totaling $156.7M across all departments."
-
-### 3. Find with Filter
-
-**Query:** "Find orders over $50,000"
-
-**Generated MongoDB:**
-```json
-{
-  "operation": "find",
-  "filter": {"total_price": {"$gt": 50000}},
-  "sort": {"total_price": -1},
-  "limit": 100
-}
-```
-
-**Response:** "I found 1,234 orders over $50,000! The largest was a whopping $2.3M from the Department of Transportation. Here are the top orders..."
-
----
-
 ##  Architecture Decisions
-
-### Why Multi-Agent Routing?
-
-**Decision:** Separate agents for data queries vs. general chat
-
-**Rationale:**
--  **Better UX**: System can greet users and provide help
--  **Specialized Agents**: Each agent excels at its specific task
--  **Flexible**: Easy to add more agent types in the future
--  **No Performance Impact**: Data queries go straight to MongoDB agent as before
 
 ### Why Two-Tier Query System?
 
@@ -923,26 +814,6 @@ total_count = collection.aggregate(pipeline + [{"$count": "total"}])
 - Downloads: CSV/JSON contain complete data (up to 10K)
 - Frontend: Shows "Total: X | Available: Y | Summary: Z"
 
-### Why Natural Language Responses?
-
-**Decision:** Make LLM responses engaging and conversational
-
-**Rationale:**
--  **Engagement**: Users prefer natural, story-driven explanations
--  **Insights**: Highlighting patterns makes data more actionable
--  **Readability**: Varied sentence structure is easier to scan
--  **Brand**: Professional yet approachable tone
-
-
-### Why Session Persistence?
-
-**Decision:** Store session ID in localStorage and restore on page load
-
-**Rationale:**
--  **Better UX**: Users don't lose their work on accidental refresh
--  **Mobile Friendly**: Survives tab switches and app minimization
--  **History Management**: Easy to browse and resume old conversations
--  **Simple Implementation**: No server-side session management needed
 
 ### Why Safety-Only Guardrails?
 
@@ -994,48 +865,13 @@ For in-depth information about specific system components, see the specialized d
 
 **Evaluation Framework**
 - [READMEs/EVALUATION.md](READMEs/EVALUATION.md)
-- Unified evaluation system with 5 criteria (100-point scale)
+- Evaluation system with 5 criteria (100-point scale)
 - MLflow GenAI integration
 - Custom judges and scoring
 - Result analysis and visualization
 - Command-line options and best practices
 
-### Additional Resources
-
-**Unified Evaluation Guide**
-- [UNIFIED_EVALUATION.md](UNIFIED_EVALUATION.md)
-- Complete unified evaluation overview
-- Feature comparison with legacy systems
-- Migration guide
-- Example output and workflows
-
-**MLflow Navigation**
-- [MLFLOW_NAVIGATION_GUIDE.md](MLFLOW_NAVIGATION_GUIDE.md)
-- Step-by-step UI navigation
-- Finding artifacts and metrics
-- Comparing runs
-
-**LangGraph Tracing**
-- [LANGGRAPH_TRACING_GUIDE.md](LANGGRAPH_TRACING_GUIDE.md)
-- Complete LangGraph workflow visualization in MLflow
-- Node-level execution tracing
-- Performance analysis and debugging
-- Interactive trace exploration
-
-**Implementation Overview**
-- [IMPLEMENTATION_COMPLETE.md](IMPLEMENTATION_COMPLETE.md)
-- MLflow GenAI features summary
-- Testing validation
-- Quick reference
-
 ---
-
-##  License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
 
 ## Acknowledgments
 
@@ -1047,26 +883,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Sentence Transformers** - Local embedding generation
 
 ---
-
-## Project Stats
-
-- **Lines of Code**: ~5,100 (Python + JavaScript)
-- **Agents**: 3 (Router, Data Query, Chat)
-- **Query Execution**: Two-tier (limited + complete)
-- **Result Limits**: 100 (summary) / 10,000 (downloads)
-- **Schema Fields**: 40+ fields with enriched metadata
-- **Schema Metadata**: 6 types (type, nullable, null_percentage, sample_values, description, note)
-- **Memory System**: Dual (MongoDB + ChromaDB)
-- **Embedding Model**: all-MiniLM-L6-v2 (384 dims)
-- **LLM**: gpt-4o-mini (cost-optimized)
-- **Response Style**: Natural, conversational, engaging
-- **Data Tools**: CSV importer with command-line interface
-- **Evaluation**: Comprehensive framework with MLflow tracking (5 criteria, 100-point scale, 53 test queries)
-- **Evaluation Scoring**: 2-tier system (Query Gen 80%, Response Quality 20%)
-- **Auto-Generated Files**: collection_schema.json (saved on startup)
-
----
-
-**Built using LangGraph, FastAPI, MongoDB, and ChromaDB**
-
-*An intelligent multi-agent system for procurement analysis*
