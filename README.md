@@ -373,7 +373,7 @@ SHORT_TERM_LIMIT=10
 LONG_TERM_TOP_K=3
 ```
 
-### Step 5: Load Procurement Data
+### Step 5: Load Procurement Data (you should have mongo and runing in background)
 
 **Option A: Automatic download and import to MongoDB**
 ```bash

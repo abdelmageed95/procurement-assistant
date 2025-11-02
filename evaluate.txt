@@ -17,3 +17,4 @@
 16. What is the year-over-year growth rate in total purchases?
 17. How many acquisitions used CalCard per fiscal year?
 18. Which fiscal year had the lowest total number of suppliers?
+19. Show me orders over $50,000
