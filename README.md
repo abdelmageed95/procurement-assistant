@@ -333,7 +333,7 @@ procurement_experiments/
 
 ```bash
 git clone https://github.com/abdelmageed95/procurement-assistant.git
-cd procurement-agent
+cd procurement-assistant
 ```
 
 ### Step 2: Create Virtual Environment
