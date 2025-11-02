@@ -294,7 +294,7 @@ procurement_experiments/
 ### Prerequisites
 
 - Python 3.10+
-- MongoDB 4.4+ (running locally or remote)
+- MongoDB (running locally or remote)
 - OpenAI API key
 - 4GB+ RAM (for Sentence Transformers embeddings)
 
