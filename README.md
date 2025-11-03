@@ -236,11 +236,9 @@ Technical Details below to see everything and download the data."
 ### 7. **Modern User Interface**
 
 - **Real-time Chat**: WebSocket-based instant messaging
-- **Smart Resend Button**: Automatically removes old responses when retrying
+- **Resend Button**: Automatically removes old responses when retrying
 - **Technical Details Modal**: View complete results + download options
 - **Welcome Message**: Fades on first user message
-- **Responsive Design**: Works on desktop, tablet, and mobile
-- **Professional Styling**: Calm color palette, smooth animations
 
 ---
 
