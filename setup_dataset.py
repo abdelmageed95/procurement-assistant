@@ -56,7 +56,7 @@ class DatasetSetup:
         kaggle_url="https://www.kaggle.com/api/v1/datasets/download/sohier/large-purchases-by-the-state-of-ca",
         mongo_uri="mongodb://localhost:27017/",
         db_name="procurement_db",
-        collection_name="purchase_orders",
+        collection_name="procurement_data",
         batch_size=1000,
         clear_existing=True,
         keep_zip=False,
@@ -363,8 +363,8 @@ Examples:
     parser.add_argument(
         "--collection",
         type=str,
-        default="purchase_orders",
-        help="Collection name (default: purchase_orders)",
+        default="procurement_data",
+        help="Collection name (default: procurement_data)",
     )
 
     parser.add_argument(

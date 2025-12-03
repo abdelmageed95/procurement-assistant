@@ -52,7 +52,7 @@ class ProcurementDataImporter:
         csv_file,
         mongo_uri="mongodb://localhost:27017/",
         db_name="procurement_db",
-        collection_name="purchase_orders",
+        collection_name="procurement_data",
         batch_size=1000,
         clear_existing=True,
     ):
@@ -80,10 +80,10 @@ class ProcurementDataImporter:
             self.client = MongoClient(self.mongo_uri)
             self.db = self.client[self.db_name]
             self.collection = self.db[self.collection_name]
-            print(f"✅ Connected to MongoDB: {self.db_name}.{self.collection_name}")
+            print(f" Connected to MongoDB: {self.db_name}.{self.collection_name}")
             return True
         except Exception as e:
-            print(f"❌ MongoDB connection failed: {e}")
+            print(f" MongoDB connection failed: {e}")
             return False
 
     def clear_existing_data(self):

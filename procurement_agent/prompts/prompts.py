@@ -66,7 +66,7 @@ You can generate one of three operations:
 
 ## Aggregation Examples
 
-**Example 1: Count orders per department in date range**
+**Example 1: Count UNIQUE purchase orders per department in 2014**
 {{
   "operation": "aggregate",
   "pipeline": [
@@ -80,11 +80,19 @@ You can generate one of three operations:
     }},
     {{
       "$group": {{
-        "_id": "$department_name",
-        "order_count": {{"$sum": 1}}
+        "_id": {{
+          "department": "$department_name",
+          "order": "$purchase_order_number"
+        }}
       }}
     }},
-    {{"$sort": {{"order_count": -1}}}},
+    {{
+      "$group": {{
+        "_id": "$_id.department",
+        "unique_order_count": {{"$sum": 1}}
+      }}
+    }},
+    {{"$sort": {{"unique_order_count": -1}}}},
     {{"$limit": 50}}
   ]
 }}
@@ -160,18 +168,27 @@ You can generate one of three operations:
   ]
 }}
 
-**Example 5: Top suppliers by order count**
+**Example 5: Top suppliers by UNIQUE purchase order count**
 {{
   "operation": "aggregate",
   "pipeline": [
     {{
       "$group": {{
-        "_id": "$supplier_name",
-        "order_count": {{"$sum": 1}},
-        "total_value": {{"$sum": "$total_price"}}
+        "_id": {{
+          "supplier": "$supplier_name",
+          "order": "$purchase_order_number"
+        }},
+        "order_total": {{"$sum": "$total_price"}}
       }}
     }},
-    {{"$sort": {{"order_count": -1}}}},
+    {{
+      "$group": {{
+        "_id": "$_id.supplier",
+        "unique_order_count": {{"$sum": 1}},
+        "total_value": {{"$sum": "$order_total"}}
+      }}
+    }},
+    {{"$sort": {{"unique_order_count": -1}}}},
     {{"$limit": 10}}
   ]
 }}
@@ -200,6 +217,59 @@ You can generate one of three operations:
 
 ---
 
+##  CRITICAL: Counting Ambiguity Resolution
+
+**IMPORTANT DATA STRUCTURE:**
+- Each document represents ONE LINE ITEM (not a complete purchase order)
+- Multiple line items can belong to the SAME purchase order
+- purchase_order_number is NOT unique (one order can have many line items)
+
+**When user asks "How many purchase orders...":**
+
+**Option 1: Count UNIQUE purchase orders (most likely intent)**
+Use $group with purchase_order_number to count distinct orders:
+{{
+  "operation": "aggregate",
+  "pipeline": [
+    {{"$match": {{"creation_date": {{"$gte": {{"__datetime__": "2014-01-01"}}, "$lt": {{"__datetime__": "2015-01-01"}}}}}}}},
+    {{"$group": {{"_id": "$purchase_order_number"}}}},
+    {{"$count": "unique_orders"}}
+  ]
+}}
+
+**Option 2: Count TOTAL line items (if specifically asked for "items" or "records")**
+Use simple count or $sum: 1:
+{{
+  "operation": "count",
+  "filter": {{
+    "creation_date": {{
+      "$gte": {{"__datetime__": "2014-01-01"}},
+      "$lt": {{"__datetime__": "2015-01-01"}}
+    }}
+  }}
+}}
+
+**Decision Rule:**
+- "How many purchase orders" → Count UNIQUE purchase_order_number (Option 1)
+- "How many orders" → Count UNIQUE purchase_order_number (Option 1)
+- "How many line items" → Count documents (Option 2)
+- "How many records" → Count documents (Option 2)
+- "How many items purchased" → Count documents (Option 2)
+- When in doubt → Count UNIQUE purchase orders (Option 1) as this is usually the user's intent
+
+**Examples:**
+
+User: "How many purchase orders did the Department of Health place in 2014?"
+→ Count UNIQUE purchase_order_number with department filter
+
+User: "How many orders were over $50,000?"
+→ Count UNIQUE purchase_order_number where total_price > 50000
+
+User: "How many line items were purchased in 2014?"
+→ Count total documents (all rows)
+
+---
+
 ##  Field Types Reference
 
 | Field | Type | MongoDB Operators | Notes |
@@ -207,6 +277,8 @@ You can generate one of three operations:
 | creation_date, purchase_date | datetime | $gte, $lte, $gt, $lt | Always use __datetime__ placeholder. Use creation_date for "when purchased" queries |
 | total_price, unit_price, quantity | numeric | $gt, $gte, $lt, $lte, $eq | Direct numeric comparisons |
 | department_name, supplier_name | text | $eq, $regex | Use $regex with "i" option for case-insensitive |
+| purchase_order_number | text | $eq, $regex | Unique identifier for orders |
+
 
 
 ---
@@ -268,6 +340,7 @@ You MUST call the execute_mongodb_query function with the generated query.
 DO NOT respond with text explanations.
 DO NOT say you cannot help or ask for clarification.
 DO NOT mention database/table names in your response.
+Check the required fields for each operation type and ensure your output adheres to the schema.
 
 ALWAYS generate a valid MongoDB query and call execute_mongodb_query.
 

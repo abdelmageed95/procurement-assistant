@@ -428,9 +428,20 @@ class MongoDBQueryAgent:
                     "data": None,
                     "success": False
                 }
-
+            """
+             LLM return example : {
+                "operation": "aggregate",
+                "pipeline": [
+                {"$group": {"_id": null, "avg": {"$avg":
+            "$total_price"}}}
+                ]
+            }
+            """
             query_params = json.loads(tool_call_any.function.arguments)
-
+            """
+            query_params = {"operation": "aggregate",
+                            "pipeline": [...]}
+            """
             # Log the generated query
             print(f"\nGenerated query: {json.dumps(query_params, indent=2, default=str)}")
 

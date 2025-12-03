@@ -24,7 +24,6 @@ workflow = create_workflow()
 # Active WebSocket connections
 active_connections: Dict[str, WebSocket] = {}
 
-
 class ChatMessage(BaseModel):
     """Chat message model"""
     message: str
